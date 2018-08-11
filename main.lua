@@ -36,9 +36,19 @@ function love.update(dt)
 end
 
 function love.draw()
-  for yy=0,#terrain do
-    for xx=0,#terrain[yy] do
-      if terrain[yy][xx] == 1 then
+  local startX = round(rafUtils.camera.x / BLOCKSIZE * PPM)
+  local endX = startX + WTWIDTH
+  local startY = round(rafUtils.camera.y / BLOCKSIZE * PPM)
+  local endY = startY + WTHEIGHT
+  startX = math.max(0,startX-1)
+  endX = math.min(#terrain[0],endX+1)
+  startY = math.max(0,startY-1)
+  endY = math.min(#terrain,endY+1)
+
+
+  for yy=startY,endY do
+    for xx=startX,endX do
+      if terrain[yy][xx] == 0 then
         love.graphics.rectangle('fill',
         xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,
         BLOCKSIZE*PPM, BLOCKSIZE*PPM)
@@ -51,13 +61,18 @@ function love.draw()
       end
     end
   end
+  love.graphics.setColor(0,1,0,1)
   love.graphics.print(startIter,0,0)
+  love.graphics.print(rafUtils.camera.x..' ; '..rafUtils.camera.y,0,15)
+  love.graphics.print('startX:'..startX..' ;endX: '..endX,0,30)
+  love.graphics.print('startY:'..startX..' ;endY; '..endY,0,45)
+  love.graphics.setColor(1,1,1,1)
 end
 
 function love.keypressed (key)
   if key == 'escape' then love.event.quit() end
   if key == 'return' then
-    print(SEED)
+    -- print(SEED)
     nIter=startIter
     love.math.setRandomSeed(SEED)
     terrain = createRandTerrain(WORLDWIDTH,WORLDHEIGHT)
@@ -152,4 +167,10 @@ function createWall(terrain)
     end
   end
   return tmp
+end
+
+function round(val)
+  local floor = math.floor(val)
+  if(val%1 >=0.5 ) then return floor+1 end
+  return floor
 end

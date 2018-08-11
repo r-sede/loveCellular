@@ -9,7 +9,7 @@ rafUtils.toZeroIndex = function (arr)
   return res
 end
 
-rafUtils.camera = {x=0,y=0,speed=BLOCKSIZE*PPM}
+rafUtils.camera = {x=0, y=0, speed=BLOCKSIZE*PPM}
 rafUtils.camera.keypressed = function (key)
   if key == 'up' then rafUtils.camera.y = rafUtils.camera.y + rafUtils.camera.speed end
   if key == 'down' then rafUtils.camera.y = rafUtils.camera.y - rafUtils.camera.speed end
