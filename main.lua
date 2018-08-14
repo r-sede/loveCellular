@@ -31,50 +31,32 @@ function love.load(arg)
   terrain = createRandTerrain(WORLDWIDTH,WORLDHEIGHT)
   terrain = iterCellular(terrain)
   terrain = createWall(terrain)
+  --terrain = minHeightCheck(terrain)
   terrain = createWall2(terrain)
+  createWall3(terrain)
+
+  varyFloor(terrain)
 
   ATLAS = love.graphics.newImage('assets/img/CB-All_Temple.png')
   TILES[0] = love.graphics.newQuad(2*8, 3*8, 8, 8, ATLAS:getDimensions())
   TILES[-1] = love.graphics.newQuad(3*8, 3*8, 8, 8, ATLAS:getDimensions())
   TILES[-2] = love.graphics.newQuad(2*8, 2*8, 8, 8, ATLAS:getDimensions())
   
-  
-  -- TILES[31] = love.graphics.newQuad(14*8, 8*8, 8, 8, ATLAS:getDimensions())
-  -- TILES[191] = TILES[31]
-  -- TILES[62] = TILES[31]
-  -- TILES[28] = TILES[31]
-  -- TILES[60] = TILES[31]
-  
-  -- -- TILES[223] = love.graphics.newQuad(16*8, 8*8, 8, 8, ATLAS:getDimensions())
-  -- TILES[30] = love.graphics.newQuad(13*8, 8*8, 8, 8, ATLAS:getDimensions())
-  -- TILES[159] = TILES[30]
-  
-  -- TILES[63] = love.graphics.newQuad(15*8, 8*8, 8, 8, ATLAS:getDimensions())
-  -- TILES[15] = TILES[63]
-  -- TILES[135] = TILES[63]
-  -- TILES[7] = TILES[63]
-  -- TILES[143] = TILES[63]
   ----------------------------------------------
   TILES[31] = love.graphics.newQuad(13*8, 6*8, 8, 8, ATLAS:getDimensions())
   TILES[191] = TILES[31]
   TILES[63] = TILES[31]
   TILES[159] = TILES[31]
   
-  
   TILES[28] = love.graphics.newQuad(16*8, 8*8, 8, 8, ATLAS:getDimensions())
   TILES[60] = TILES[28]
   TILES[30] = TILES[28]
   TILES[62] = TILES[28]
-  
-  -- TILES[223] = love.graphics.newQuad(16*8, 8*8, 8, 8, ATLAS:getDimensions())
-  
-  --TILES[159] = love.graphics.newQuad(13*8, 8*8, 8, 8, ATLAS:getDimensions())
-  
+
   TILES[15] = love.graphics.newQuad(12*8, 8*8, 8, 8, ATLAS:getDimensions())
   TILES[135] = TILES[15]
   TILES[7] = TILES[15]
   TILES[143] = TILES[15]
-
 
   TILES[127] = love.graphics.newQuad(16*8, 6*8, 8, 8, ATLAS:getDimensions())
 
@@ -85,7 +67,6 @@ function love.load(arg)
   TILES[239] = TILES[199]
   TILES[231] = TILES[199]
   
-  --12 7
   TILES[193] = love.graphics.newQuad(13*8, 10*8, 8, 8, ATLAS:getDimensions())
   TILES[225] = TILES[193]
   TILES[227] = TILES[193]
@@ -100,9 +81,6 @@ function love.load(arg)
   TILES[243] = TILES[241]
   TILES[251] = TILES[241]
 
-
-  --print(WTWIDTH)
-  
   TILES[253] = love.graphics.newQuad(17*8, 10*8, 8, 8, ATLAS:getDimensions())
   
   TILES[248] = love.graphics.newQuad(15*8, 10*8, 8, 8, ATLAS:getDimensions())
@@ -110,14 +88,18 @@ function love.load(arg)
   TILES[120] = TILES[248]
   TILES[112] = TILES[248]
   
-  
   TILES[124] = love.graphics.newQuad(16*8, 7*8, 8, 8, ATLAS:getDimensions())
   TILES[126] = TILES[124]
   TILES[252] = TILES[124]
   TILES[254] = TILES[124]
+
+  -----------------------------------
+  TILES[256] = love.graphics.newQuad(14*8,7*8,8,8,ATLAS:getDimensions())
+  TILES[257] = love.graphics.newQuad(14*8,8*8,8,8,ATLAS:getDimensions())
 end
 
 function love.update(dt)
+  
 end
 
 function love.draw()
@@ -136,12 +118,7 @@ function love.draw()
       if  TILES[terrain[yy][xx]] ~= nil then
         love.graphics.draw(ATLAS,TILES[terrain[yy][xx]],xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,0,PPM,PPM)
       end
-      if debug then 
-        love.graphics.setColor(0,1,0,1)
-        
-        love.graphics.print(terrain[yy][xx],xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y)
-        love.graphics.setColor(1,1,1,1)
-      end
+      ------------------------------
       -- if terrain[yy][xx] == 0 then
       --   -- love.graphics.rectangle('fill',
       --   -- xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,
@@ -154,15 +131,23 @@ function love.draw()
       --   BLOCKSIZE*PPM, BLOCKSIZE*PPM)
       --   love.graphics.setColor(1,1,1,1)
       -- end
+      ---------------------------
+      if debug then 
+        love.graphics.setColor(0,1,0,1)
+        
+        love.graphics.print(terrain[yy][xx],xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y)
+        love.graphics.setColor(1,1,1,1)
+      end
     end
   end
-  if debug then
+  if true then
     love.graphics.setColor(0,1,0,1)
     love.graphics.print(startIter,0,0)
     love.graphics.print(rafUtils.camera.x..' ; '..rafUtils.camera.y,0,15)
     love.graphics.print('startX: '..startX..' ;endX: '..endX,0,30)
     love.graphics.print('startY: '..startY..' ;endY; '..endY,0,45)
     love.graphics.print(love.timer.getFPS() ..'fps',0,60)
+    love.graphics.print('scale: '..PPM,0,75)
     love.graphics.setColor(1,1,1,1)
   end
   
@@ -170,6 +155,9 @@ end
 
 function love.keypressed (key)
   if key == 'escape' then love.event.quit() end
+  if key == 'd' then
+    if debug then debug = false else debug = true end
+  end
   if key == 'return' then
     -- print(SEED)
     nIter=startIter
@@ -177,14 +165,24 @@ function love.keypressed (key)
     terrain = createRandTerrain(WORLDWIDTH,WORLDHEIGHT)
     terrain = iterCellular(terrain)
     terrain = createWall(terrain)
+    terrain = minHeightCheck(terrain)
     terrain = createWall2(terrain)
+    createWall3(terrain)
+    varyFloor(terrain)
   end
   rafUtils.camera.keypressed(key)
 end
 
 function love.wheelmoved(a,dir)
-  startIter = startIter + dir
-  if startIter < 1 then startIter = 1 end
+  if love.keyboard.isDown('lshift') then
+    PPM = PPM + dir
+    if PPM < 2 then PPM = 1 end
+    WTWIDTH = SWIDTH/(BLOCKSIZE*PPM) -- number of blocks on screen along x
+    WTHEIGHT = SHEIGHT/(BLOCKSIZE*PPM) -- number of blocks on screen along y
+  else
+    startIter = startIter + dir
+    if startIter < 1 then startIter = 1 end
+  end
 end
 
 ---------------------------------
@@ -215,7 +213,7 @@ function iterCellular(terrain)
       local r = terrain[yy]                   [(xx+1)%(#terrain[yy]+1)]
       local rd = terrain[(yy+1)%(#terrain+1)] [(xx+1)%(#terrain[yy]+1)]
       local d = terrain[(yy+1)%(#terrain+1)]  [xx]
-      local ld = terrain[(yy+1)%(#terrain+1)]  [(xx-1)%(#terrain[yy]+1)]
+      local ld = terrain[(yy+1)%(#terrain+1)] [(xx-1)%(#terrain[yy]+1)]
       -- local neighBorSum = l+lu+u+ru+r+rd+d
       local neighBorSum = 0
       if l <= 0 then neighBorSum = neighBorSum + 1 end
@@ -227,16 +225,7 @@ function iterCellular(terrain)
       if d <= 0 then neighBorSum = neighBorSum + 1 end
       if ld <= 0 then neighBorSum = neighBorSum + 1 end
       -- tmp[yy][xx] = neighBorSum >= neighBorHoodThres and 1 or 0
-      if neighBorSum >= neighBorHoodThres then tmp[yy][xx]=1 else
-        local rand = love.math.random()
-        if rand < 0.005 then  
-          tmp[yy][xx]=0
-        elseif rand < 0.01 then
-          tmp[yy][xx]=0
-        else
-          tmp[yy][xx]=0
-        end
-      end
+      if neighBorSum >= neighBorHoodThres then tmp[yy][xx]=1 else tmp[yy][xx]=0 end
     end
   end
 
@@ -258,7 +247,7 @@ function createWall(terrain)
         local r = terrain[yy]                   [(xx+1)%(#terrain[yy]+1)]
         local rd = terrain[(yy+1)%(#terrain+1)] [(xx+1)%(#terrain[yy]+1)]
         local d = terrain[(yy+1)%(#terrain+1)]  [xx]
-        local ld = terrain[(yy+1)%(#terrain+1)]  [(xx-1)%(#terrain[yy]+1)]
+        local ld = terrain[(yy+1)%(#terrain+1)] [(xx-1)%(#terrain[yy]+1)]
         -- local neighBorSum = l+lu+u+ru+r+rd+d
         local neighBorSum = 0
         if l == 1 then neighBorSum = neighBorSum + 1 end
@@ -312,8 +301,96 @@ function createWall2(terrain)
   return tmp
 end
 
+function varyFloor(terrain)
+  for yy=0,#terrain do
+    for xx=0,#terrain[yy] do
+      if terrain[yy][xx] == 0 then
+        local rand = love.math.random()
+        if rand < 0.005 then  
+          terrain[yy][xx]=-1
+        elseif rand < 0.01 then
+          terrain[yy][xx]=-2
+        else
+          terrain[yy][xx]=0
+        end
+      end
+    end
+  end
+end
+
 function round(val)
   local floor = math.floor(val)
   if(val%1 >=0.5 ) then return floor+1 end
   return floor
+end
+
+function createWall3(terrain)
+  for yy=0,#terrain do
+    for xx=0,#terrain[yy] do
+      if  terrain[yy][xx] == 31 or
+          terrain[yy][xx] == 191 or
+          terrain[yy][xx] == 63 or
+          terrain[yy][xx] == 159 or
+          terrain[yy][xx] == 135 or
+          terrain[yy][xx] == 15 or
+          terrain[yy][xx] == 7 or
+          terrain[yy][xx] == 143 or
+          terrain[yy][xx] == 28 or
+          terrain[yy][xx] == 60 or
+          terrain[yy][xx] == 30 or
+          terrain[yy][xx] == 62 then
+        if yy <= #terrain -2 then 
+          terrain[yy+1][xx] = 256
+          terrain[yy+2][xx] = 257
+        elseif yy <= #terrain -1 then 
+          terrain[yy+1][xx] = 256
+        end
+      else
+      end
+    end
+  end
+end
+
+function minHeightCheck(terrain)
+  local tmp = {}
+  for yy=0,#terrain do
+    tmp[yy] = {}
+  end
+
+
+  for yy=0,#terrain do
+    for xx=0,#terrain[yy] do
+      if terrain[yy][xx] == 0 then tmp[yy][xx] = 0
+      elseif terrain[yy][xx] == 1 then tmp[yy][xx] = 1
+      elseif terrain[yy][xx] == 2 then
+        tmp[yy][xx] = 0
+        if yy <= #terrain-8 then
+          if terrain[yy+1][xx] == 0 then
+
+            if tmp[yy+2][xx] == nil then tmp[yy+2][xx] = 0 end 
+            if tmp[yy+3][xx] == nil then tmp[yy+3][xx] = 0 end 
+            if tmp[yy+4][xx] == nil then tmp[yy+4][xx] = 0 end 
+            if tmp[yy+5][xx] == nil then tmp[yy+5][xx] = 0 end 
+            if tmp[yy+6][xx] == nil then tmp[yy+6][xx] = 0 end 
+            if tmp[yy+7][xx] == nil then tmp[yy+7][xx] = 0 end 
+            if tmp[yy+8][xx] == nil then tmp[yy+8][xx] = 0 end 
+            -- if terrain[yy+6][xx] == 1 or terrain[yy+6][xx] == 2 then tmp[yy+6][xx] = 0 else tmp[yy+6][xx]=1 end
+            -- if terrain[yy+7][xx] == 1 or terrain[yy+7][xx] == 2 then tmp[yy+7][xx] = 0 else tmp[yy+7][xx]=1 end
+            -- if terrain[yy+8][xx] == 1 or terrain[yy+8][xx] == 2 then tmp[yy+8][xx] = 0 else tmp[yy+8][xx]=1 end
+          end
+        end
+      end
+    end
+  end
+
+  -- for yy=0,#terrain do
+  --   for xx=0,#terrain[yy] do
+  --     if terrain[yy][xx] == 2 or terrain[yy][xx] == 0 then
+  --       tmp[yy][xx] = 0
+  --     else
+  --       tmp[yy][xx] = 1
+  --     end
+  --   end
+  -- end
+  return createWall(tmp)
 end
