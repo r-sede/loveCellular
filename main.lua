@@ -1,4 +1,4 @@
-PPM = 4 -- scale
+PPM = 1 -- scale
 BLOCKSIZE = 8
 local SWIDTH = 640 -- screen width in pixels
 local SHEIGHT = 480 -- screen height in pixels
@@ -13,8 +13,8 @@ local SEED = nil
 local rafUtils = require"rafUtils"
 local terrain = nil
 local rRockCells = 0.5
-local nIter =7
-local startIter = 7
+local nIter =9
+local startIter = 9
 local neighBorHoodThres = 5
 local terrain = nil
 local debug = true
@@ -30,8 +30,8 @@ function love.load(arg)
   love.math.setRandomSeed(SEED)
   terrain = createRandTerrain(WORLDWIDTH,WORLDHEIGHT)
   terrain = iterCellular(terrain)
-  terrain = createWall(terrain)
   --terrain = minHeightCheck(terrain)
+  terrain = createWall(terrain)
   terrain = createWall2(terrain)
   createWall3(terrain)
 
@@ -164,11 +164,25 @@ function love.keypressed (key)
     love.math.setRandomSeed(SEED)
     terrain = createRandTerrain(WORLDWIDTH,WORLDHEIGHT)
     terrain = iterCellular(terrain)
-    terrain = createWall(terrain)
     terrain = minHeightCheck(terrain)
+    terrain = createWall(terrain)
     terrain = createWall2(terrain)
     createWall3(terrain)
-    varyFloor(terrain)
+    varyFloor(terrain) 
+  end
+  if key == "r" then 
+    nIter=startIter
+    love.math.setRandomSeed(SEED)
+    terrain = createRandTerrain(WORLDWIDTH,WORLDHEIGHT)
+    terrain = iterCellular(terrain)
+    --terrain = minHeightCheck(terrain)
+    terrain = createWall(terrain)
+    terrain = createWall2(terrain)
+    createWall3(terrain)
+    varyFloor(terrain) 
+  end
+  if key == "s" then 
+    SEED = love.timer.getTime()
   end
   rafUtils.camera.keypressed(key)
 end
@@ -352,12 +366,12 @@ function createWall3(terrain)
 end
 
 function minHeightCheck(terrain)
-  local tmp = {}
+--[[   local tmp = {}
   for yy=0,#terrain do
     tmp[yy] = {}
   end
 
-
+  local xx, yy = 0, 0
   for yy=0,#terrain do
     for xx=0,#terrain[yy] do
       if terrain[yy][xx] == 0 then tmp[yy][xx] = 0
@@ -381,6 +395,44 @@ function minHeightCheck(terrain)
         end
       end
     end
+  end ]]
+  local modified = {}
+  local tmp = {}
+
+  for yy=0,#terrain do
+    modified[yy] = {}
+    tmp[yy] = {}
+    for xx=0,#terrain[yy] do
+      modified[yy][xx] = false
+    end
+  end
+
+  for yy=0,#terrain do
+    for xx=0,#terrain[yy] do
+      if modified[yy][xx] then 
+      elseif terrain[yy][xx]==1 and yy <= #terrain-8 and terrain[yy+1][xx] == 0 then
+        if terrain[yy+2] == 1 or terrain[yy+3][xx] == 1 or terrain[yy+4][xx] == 1 then
+          tmp[yy+1][xx] = 0
+          modified[yy+1][xx] = true
+          tmp[yy+2][xx] = 0
+          modified[yy+2][xx] = true
+          tmp[yy+3][xx] = 0
+          modified[yy+3][xx] = true
+          tmp[yy+4][xx] = 0
+          modified[yy+4][xx] = true
+
+        end
+      end
+    end
+  end
+
+  for yy=0,#terrain do
+    for xx=0,#terrain[yy] do
+      if modified[yy][xx] then 
+      else
+        tmp[yy][xx] = terrain[yy][xx]
+      end
+    end
   end
 
   -- for yy=0,#terrain do
@@ -392,5 +444,5 @@ function minHeightCheck(terrain)
   --     end
   --   end
   -- end
-  return createWall(tmp)
+  return tmp
 end
