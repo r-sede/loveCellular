@@ -1,23 +1,25 @@
-PPM = 1 -- scale
+PPM = 4 -- scale
 BLOCKSIZE = 8
-local SWIDTH = 640 -- screen width in pixels
-local SHEIGHT = 480 -- screen height in pixels
-local WTWIDTH = SWIDTH/(BLOCKSIZE*PPM) -- number of blocks on screen along x
-local WTHEIGHT = SHEIGHT/(BLOCKSIZE*PPM) -- number of blocks on screen along y
-local WORLDWIDTH = 128*2 -- width of world in block
-local WORLDHEIGHT = 128*2 -- height of world in block
+local SWIDTH = 1024--640--*2 -- screen width in pixels
+local SHEIGHT = 768--576--*2 -- screen height in pixels
+ WTWIDTH = SWIDTH/(BLOCKSIZE*PPM) -- number of blocks on screen along x
+ WTHEIGHT = SHEIGHT/(BLOCKSIZE*PPM) -- number of blocks on screen along y
+ WORLDWIDTH = 128--*4 -- width of world in block
+ WORLDHEIGHT = 128--*4 -- height of world in block
 local TILES = {}
 local ATLAS = nil
 local SEED = nil
 
-local rafUtils = require"rafUtils"
-local terrain = nil
-local rRockCells = 0.5
-local nIter =9
-local startIter = 9
+rafUtils = require"rafUtils"
+local getMap = require'map'
+local rRockCells = 0.48
+local nIter =11
+local startIter = 11
 local neighBorHoodThres = 5
-local terrain = nil
+ terrain = nil
+local fog = nil
 local debug = true
+local playerX,playerY = nil,nil
 
 function love.load(arg)
   love.graphics.setDefaultFilter('nearest')
@@ -28,14 +30,8 @@ function love.load(arg)
   
   SEED = love.timer.getTime()
   love.math.setRandomSeed(SEED)
-  terrain = createRandTerrain(WORLDWIDTH,WORLDHEIGHT)
-  terrain = iterCellular(terrain)
-  --terrain = minHeightCheck(terrain)
-  terrain = createWall(terrain)
-  terrain = createWall2(terrain)
-  createWall3(terrain)
-
-  varyFloor(terrain)
+  require'hero'
+  resetMap()
 
   ATLAS = love.graphics.newImage('assets/img/CB-All_Temple.png')
   TILES[0] = love.graphics.newQuad(2*8, 3*8, 8, 8, ATLAS:getDimensions())
@@ -99,7 +95,9 @@ function love.load(arg)
 end
 
 function love.update(dt)
-  
+  hero:update(dt)
+  rafUtils.camera.lookAt(hero.x,hero.y)
+  updateFog(8)
 end
 
 function love.draw()
@@ -115,33 +113,43 @@ function love.draw()
 
   for yy=startY,endY do
     for xx=startX,endX do
-      if  TILES[terrain[yy][xx]] ~= nil then
-        love.graphics.draw(ATLAS,TILES[terrain[yy][xx]],xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,0,PPM,PPM)
+      if fog[yy][xx] == 0 then
+        if  TILES[terrain[yy][xx]] ~= nil then
+          if terrain[yy][xx] ~= 225 and terrain[yy][xx] ~=241 and terrain[yy][xx] ~=112 and terrain[yy][xx]~= 240 and terrain[yy][xx] ~=120 and terrain[yy][xx] ~=195 and terrain[yy][xx] ~=193 and terrain[yy][xx] ~=249 and terrain[yy][xx] ~=243 and terrain[yy][xx] ~=251 and terrain[yy][xx] ~=227 then
+            love.graphics.draw(ATLAS,TILES[terrain[yy][xx]],xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,0,PPM,PPM)
+          end
+        end
       end
-      ------------------------------
-      -- if terrain[yy][xx] == 0 then
-      --   -- love.graphics.rectangle('fill',
-      --   -- xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,
-      --   -- BLOCKSIZE*PPM, BLOCKSIZE*PPM)
-      --   love.graphics.draw(ATLAS,TILES[0],xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,0,PPM,PPM)
-      -- elseif terrain[yy][xx] == 2 then
-      --   love.graphics.setColor(1,0,0,1)
-      --   love.graphics.rectangle('fill',
-      --   xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,
-      --   BLOCKSIZE*PPM, BLOCKSIZE*PPM)
-      --   love.graphics.setColor(1,1,1,1)
-      -- end
-      ---------------------------
+    end
+  end
+  
+  hero:draw()
+  --2layer + debug
+  for yy=startY,endY do
+    for xx=startX,endX do
+      if fog[yy][xx] == 0 then
+        if  TILES[terrain[yy][xx]] ~= nil then
+          if terrain[yy][xx] == 225 or terrain[yy][xx] ==241 or terrain[yy][xx] ==112 or terrain[yy][xx]== 240 or terrain[yy][xx] ==120 or terrain[yy][xx] ==195 or terrain[yy][xx] ==193 or terrain[yy][xx] ==249 or terrain[yy][xx] ==243 or terrain[yy][xx] ==251 or terrain[yy][xx] ==227 then
+            love.graphics.draw(ATLAS,TILES[terrain[yy][xx]],xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,0,PPM,PPM)
+            love.graphics.rectangle('line',xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,PPM*BLOCKSIZE,PPM*BLOCKSIZE)
+          end
+        end
+      end
       if debug then 
         love.graphics.setColor(0,1,0,1)
         
         love.graphics.print(terrain[yy][xx],xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y)
+        if yy == playerY and xx == playerX then
+          love.graphics.rectangle('fill',
+          xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,
+          BLOCKSIZE*PPM, BLOCKSIZE*PPM)
+        end
         love.graphics.setColor(1,1,1,1)
       end
     end
   end
   if true then
-    love.graphics.setColor(0,1,0,1)
+    love.graphics.setColor(1,0,1,1)
     love.graphics.print(startIter,0,0)
     love.graphics.print(rafUtils.camera.x..' ; '..rafUtils.camera.y,0,15)
     love.graphics.print('startX: '..startX..' ;endX: '..endX,0,30)
@@ -160,37 +168,18 @@ function love.keypressed (key)
   end
   if key == 'return' then
     -- print(SEED)
-    nIter=startIter
-    love.math.setRandomSeed(SEED)
-    terrain = createRandTerrain(WORLDWIDTH,WORLDHEIGHT)
-    terrain = iterCellular(terrain)
-    terrain = minHeightCheck(terrain)
-    terrain = createWall(terrain)
-    terrain = createWall2(terrain)
-    createWall3(terrain)
-    varyFloor(terrain) 
-  end
-  if key == "r" then 
-    nIter=startIter
-    love.math.setRandomSeed(SEED)
-    terrain = createRandTerrain(WORLDWIDTH,WORLDHEIGHT)
-    terrain = iterCellular(terrain)
-    --terrain = minHeightCheck(terrain)
-    terrain = createWall(terrain)
-    terrain = createWall2(terrain)
-    createWall3(terrain)
-    varyFloor(terrain) 
+    resetMap()
   end
   if key == "s" then 
     SEED = love.timer.getTime()
   end
-  rafUtils.camera.keypressed(key)
+  --rafUtils.camera.keypressed(key)
 end
 
 function love.wheelmoved(a,dir)
   if love.keyboard.isDown('lshift') then
-    PPM = PPM + dir
-    if PPM < 2 then PPM = 1 end
+    PPM = PPM + dir*0.1
+    if PPM < 0.1 then PPM = 0.1 end
     WTWIDTH = SWIDTH/(BLOCKSIZE*PPM) -- number of blocks on screen along x
     WTHEIGHT = SHEIGHT/(BLOCKSIZE*PPM) -- number of blocks on screen along y
   else
@@ -200,6 +189,64 @@ function love.wheelmoved(a,dir)
 end
 
 ---------------------------------
+function resetMap()
+  nIter=startIter
+  love.math.setRandomSeed(SEED)
+  terrain = createRandTerrain(WORLDWIDTH,WORLDHEIGHT)
+  terrain = iterCellular(terrain)
+  --terrain = minHeightCheck(terrain)
+  terrain = createWall(terrain)
+  terrain = createWall2(terrain)
+  createWall3(terrain)
+  varyFloor(terrain)
+  local xx,yy=0,0
+  local startFound = false
+  while not startFound do
+    yy = love.math.random(0,#terrain)
+    xx = love.math.random(0,#terrain[yy])
+    if terrain[yy][xx] <= 0 then
+      playerX = xx
+      playerY = yy
+      startFound = true
+
+    end
+
+  end
+  hero.x,hero.y = playerX,playerY
+  fog = createFog(WORLDWIDTH,WORLDHEIGHT)
+end
+
+function createFog (width,height)
+  local fog = {}
+
+  for yy=0,height-1 do
+    fog[yy] = {}
+    for xx=0,width-1 do
+    fog[yy][xx] = 1
+    end
+  end
+  return fog
+end
+
+function updateFog(dist)
+
+  local startX = rafUtils.round(hero.x - dist)
+  local endX = rafUtils.round(hero.x + dist)
+  local startY = rafUtils.round(hero.y - dist)
+  local endY = rafUtils.round(hero.y + dist)
+
+  startY = rafUtils.clamp(startY,0,#fog)
+  startX = rafUtils.clamp(startX,0,#fog[startY])
+  endY = rafUtils.clamp(endY,0,#fog)
+  endX = rafUtils.clamp(endX,0,#fog)
+
+  for yy = startY,endY do
+    for xx = startX,endX do
+      fog[yy][xx] = 0
+    end
+  end
+end
+
 function createRandTerrain (width, height)
   local terrain,xx,yy = {},0,0
 
@@ -332,12 +379,6 @@ function varyFloor(terrain)
   end
 end
 
-function round(val)
-  local floor = math.floor(val)
-  if(val%1 >=0.5 ) then return floor+1 end
-  return floor
-end
-
 function createWall3(terrain)
   for yy=0,#terrain do
     for xx=0,#terrain[yy] do
@@ -363,86 +404,4 @@ function createWall3(terrain)
       end
     end
   end
-end
-
-function minHeightCheck(terrain)
---[[   local tmp = {}
-  for yy=0,#terrain do
-    tmp[yy] = {}
-  end
-
-  local xx, yy = 0, 0
-  for yy=0,#terrain do
-    for xx=0,#terrain[yy] do
-      if terrain[yy][xx] == 0 then tmp[yy][xx] = 0
-      elseif terrain[yy][xx] == 1 then tmp[yy][xx] = 1
-      elseif terrain[yy][xx] == 2 then
-        tmp[yy][xx] = 0
-        if yy <= #terrain-8 then
-          if terrain[yy+1][xx] == 0 then
-
-            if tmp[yy+2][xx] == nil then tmp[yy+2][xx] = 0 end 
-            if tmp[yy+3][xx] == nil then tmp[yy+3][xx] = 0 end 
-            if tmp[yy+4][xx] == nil then tmp[yy+4][xx] = 0 end 
-            if tmp[yy+5][xx] == nil then tmp[yy+5][xx] = 0 end 
-            if tmp[yy+6][xx] == nil then tmp[yy+6][xx] = 0 end 
-            if tmp[yy+7][xx] == nil then tmp[yy+7][xx] = 0 end 
-            if tmp[yy+8][xx] == nil then tmp[yy+8][xx] = 0 end 
-            -- if terrain[yy+6][xx] == 1 or terrain[yy+6][xx] == 2 then tmp[yy+6][xx] = 0 else tmp[yy+6][xx]=1 end
-            -- if terrain[yy+7][xx] == 1 or terrain[yy+7][xx] == 2 then tmp[yy+7][xx] = 0 else tmp[yy+7][xx]=1 end
-            -- if terrain[yy+8][xx] == 1 or terrain[yy+8][xx] == 2 then tmp[yy+8][xx] = 0 else tmp[yy+8][xx]=1 end
-          end
-        end
-      end
-    end
-  end ]]
-  local modified = {}
-  local tmp = {}
-
-  for yy=0,#terrain do
-    modified[yy] = {}
-    tmp[yy] = {}
-    for xx=0,#terrain[yy] do
-      modified[yy][xx] = false
-    end
-  end
-
-  for yy=0,#terrain do
-    for xx=0,#terrain[yy] do
-      if modified[yy][xx] then 
-      elseif terrain[yy][xx]==1 and yy <= #terrain-8 and terrain[yy+1][xx] == 0 then
-        if terrain[yy+2] == 1 or terrain[yy+3][xx] == 1 or terrain[yy+4][xx] == 1 then
-          tmp[yy+1][xx] = 0
-          modified[yy+1][xx] = true
-          tmp[yy+2][xx] = 0
-          modified[yy+2][xx] = true
-          tmp[yy+3][xx] = 0
-          modified[yy+3][xx] = true
-          tmp[yy+4][xx] = 0
-          modified[yy+4][xx] = true
-
-        end
-      end
-    end
-  end
-
-  for yy=0,#terrain do
-    for xx=0,#terrain[yy] do
-      if modified[yy][xx] then 
-      else
-        tmp[yy][xx] = terrain[yy][xx]
-      end
-    end
-  end
-
-  -- for yy=0,#terrain do
-  --   for xx=0,#terrain[yy] do
-  --     if terrain[yy][xx] == 2 or terrain[yy][xx] == 0 then
-  --       tmp[yy][xx] = 0
-  --     else
-  --       tmp[yy][xx] = 1
-  --     end
-  --   end
-  -- end
-  return tmp
 end
