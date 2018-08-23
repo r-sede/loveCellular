@@ -1,4 +1,4 @@
-local debug = true
+local debug = false
 local showTile = false
 local showFog = true
 PPM = 4 -- scale
