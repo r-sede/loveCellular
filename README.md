@@ -10,9 +10,10 @@ source: [rogueBassin](http://www.roguebasin.com/index.php?title=Cellular_Automat
 
 source: [dev tuts auto-tile](https://gamedevelopment.tutsplus.com/tutorials/how-to-use-tile-bitmasking-to-auto-tile-your-level-layouts--cms-25673)
 
-![fullMap zoom-out](https://github.com/r-sede/lovePacMan/raw/master/assets/img/readMe/mapScreen.jpg ':v')
+![Yeah bomb](https://github.com/r-sede/loveCellular/raw/master/assets/img/readMe/animGif.gif ' bomb !!')
 
-![Yeah bomb](https://github.com/r-sede/lovePacMan/raw/master/assets/img/readMe/animGif.gif ' bomb !!')
+![fullMap zoom-out](https://github.com/r-sede/loveCellular/raw/master/assets/img/readMe/mapScreen.jpg ':v')
+
 
 ### TODO:
 
