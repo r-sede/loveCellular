@@ -1,5 +1,5 @@
 local debug = true
-local showTile = true
+local showTile = false
 local showFog = true
 PPM = 4 -- scale
 BLOCKSIZE = 8
@@ -7,8 +7,8 @@ local SWIDTH = 1024--640--*2 -- screen width in pixels
 local SHEIGHT = 768--576--*2 -- screen height in pixels
 WTWIDTH = SWIDTH/(BLOCKSIZE*PPM) -- number of blocks on screen along x
 WTHEIGHT = SHEIGHT/(BLOCKSIZE*PPM) -- number of blocks on screen along y
-WORLDWIDTH = 256*1 -- width of world in block
-WORLDHEIGHT = 256*1 -- height of world in block
+WORLDWIDTH = 256*2 -- width of world in block
+WORLDHEIGHT = 256*2 -- height of world in block
 local TILES = {}
 local ATLAS = nil
 local SEED = nil
@@ -40,6 +40,9 @@ local bombTimer = 1/3
 local bombFps = 1/3
 local bombFrame = 0
 local bombs = {}
+
+local decos = nil
+local densDeco = 28
 
 
 function love.load(arg)
@@ -148,6 +151,13 @@ function love.load(arg)
   OBJTILES['chest'][2] = love.graphics.newQuad(8*8+colorGB*256, 17*8,8,8,ATLAS:getDimensions())
   OBJTILES['chest'][3] = love.graphics.newQuad(9*8+colorGB*256, 17*8,8,8,ATLAS:getDimensions())
   OBJTILES['chest'][4] = love.graphics.newQuad(10*8+colorGB*256, 17*8,8,8,ATLAS:getDimensions())
+  
+  OBJTILES['deco'] = {}
+  OBJTILES['deco'][0] = love.graphics.newQuad(7*8+colorGB*256, 13*8,8,8*3,ATLAS:getDimensions())
+  OBJTILES['deco'][1] = love.graphics.newQuad(8*8+colorGB*256, 13*8,8,8*3,ATLAS:getDimensions())
+  OBJTILES['deco'][2] = love.graphics.newQuad(9*8+colorGB*256, 13*8,8,8*3,ATLAS:getDimensions())
+  OBJTILES['deco'][3] = love.graphics.newQuad(10*8+colorGB*256, 13*8,8,8*3,ATLAS:getDimensions())
+
 
 
 end
@@ -202,6 +212,7 @@ function love.draw()
   
   drawTorch (startX, endX, startY, endY)
   drawChest (startX, endX, startY, endY)
+  drawDeco (startX, endX, startY, endY)
   --testBomb
   drawBomb(startX, endX, startY, endY)
   --love.graphics.draw(bombAtlas,bombTiles[bombFrame],bomb.x*BLOCKSIZE*PPM - rafUtils.camera.x, bomb.y*BLOCKSIZE*PPM - rafUtils.camera.y,PPM*0.5,PPM*0.5)
@@ -283,7 +294,7 @@ function love.keypressed (key)
   end
   if key == 'b' then
     -- print(SEED)
-    table.insert(bombs, {x=math.ceil(hero.x+1),y=math.ceil(hero.y), coolD=4,active = true})
+    table.insert(bombs, {x=rafUtils.round(hero.x),y=rafUtils.round(hero.y), coolD=4,active = true})
     --dropBomb(math.ceil(hero.x+1),math.ceil(hero.y))
   end
   if key == "s" then 
@@ -313,9 +324,12 @@ function resetMap()
   terrain = createWall2(terrain)
   createWall3(terrain)
   varyFloor(terrain)
+
   torchs = createTorchs(terrain,densTorch)
-  while torchs == false do
+  decos = createDecos(terrain,densDeco)
+  while torchs == false or decos == false do
     densTorch = densTorch - 1
+    densDeco = densDeco - 1
     SEED = love.timer.getTime()    
     nIter=startIter
     love.math.setRandomSeed(SEED)
@@ -326,7 +340,9 @@ function resetMap()
     createWall3(terrain)
     varyFloor(terrain)
     torchs = createTorchs(terrain,densTorch)
+    decos = createDecos(terrain,densDeco)
   end
+  
 
   chests = createChest(terrain,densChest)
 
@@ -342,6 +358,8 @@ function resetMap()
     end
   end
   hero.x,hero.y = playerX,playerY
+  rafUtils.camera.x = playerX*BLOCKSIZE*PPM
+  rafUtils.camera.y = playerY*BLOCKSIZE*PPM
   fog = createFog(WORLDWIDTH,WORLDHEIGHT)
 end
 
@@ -506,10 +524,75 @@ function drawBomb(startX, endX, startY, endY)
   for i=1,#bombs do
     if bombs[i].x >= startX and bombs[i].x < endX and bombs[i].y > startY-1 and bombs[i].y < endY then
       if fog[bombs[i].y][bombs[i].x] == 0 then
-        love.graphics.draw(bombAtlas,bombTiles[bombFrame],bombs[i].x*BLOCKSIZE*PPM - rafUtils.camera.x, bombs[i].y*BLOCKSIZE*PPM - rafUtils.camera.y,PPM*0.5,PPM*0.5)
+        love.graphics.draw(bombAtlas,bombTiles[bombFrame],bombs[i].x*BLOCKSIZE*PPM - rafUtils.camera.x, bombs[i].y*BLOCKSIZE*PPM - rafUtils.camera.y,0,PPM*0.5,PPM*0.5)
         if debug then
           love.graphics.setColor(1,0,1,1)
           love.graphics.rectangle('line',bombs[i].x * PPM * BLOCKSIZE - rafUtils.camera.x,bombs[i].y * PPM * BLOCKSIZE - rafUtils.camera.y,BLOCKSIZE* PPM,BLOCKSIZE*PPM)
+          love.graphics.setColor(1,1,1,1)
+        end
+      end
+    end 
+  end
+end
+
+function createDecos (terrain,dens)
+  local freezeCount = 0
+  local res = {}
+   local it = WORLDWIDTH / 128
+   for yyy = 0,it-1 do
+    for xxx=0,it-1 do
+      local d = dens
+      local decoPlacedX = {}
+      while d > 0 do
+        freezeCount = freezeCount + 1
+        if freezeCount >= 900000 then
+          print('yesDecos')
+          return false
+        end
+        local xtent = love.math.random(xxx*128,(xxx+1)*128)
+        local ytent = love.math.random(yyy*128,(yyy+1)*128)
+        ytent = rafUtils.clamp(ytent, 0,#terrain-1)
+        xtent = rafUtils.clamp(xtent, 0,#terrain[ytent]-4)
+        if terrain[ytent][xtent] == 31  then
+          local notFound = true
+          for i=1,#decoPlacedX do
+            if  rafUtils.distance(xtent,ytent,decoPlacedX[i].x,decoPlacedX[i].y) < 1 then
+              notFound = false
+            end
+          end
+          if torchs ~= false then
+            for i=1,#torchs do
+              if  rafUtils.distance(xtent,ytent,torchs[i].x,torchs[i].y) < 3 then
+                notFound = false
+              end
+            end
+          end
+            --[[print()
+          print(xtent)
+          print(ytent)
+          print() ]]
+          if notFound then
+            
+            table.insert( res, {x=xtent,y=ytent,type=love.math.random(0,3)} )
+            --print(xtent)
+            table.insert(decoPlacedX,{x=xtent,y=ytent})
+            d = d -1
+          end
+        end
+      end
+    end
+  end
+  return res
+end
+
+function drawDeco(startX, endX, startY, endY)
+  for i=1,#decos do
+    if decos[i].x >= startX and decos[i].x < endX and decos[i].y > startY-1 and decos[i].y < endY then
+      if fog[decos[i].y][decos[i].x] == 0 then
+        love.graphics.draw(ATLAS,OBJTILES.deco[decos[i].type],decos[i].x*BLOCKSIZE*PPM - rafUtils.camera.x, decos[i].y*BLOCKSIZE*PPM - rafUtils.camera.y,0,PPM,PPM)
+        if debug then
+          love.graphics.setColor(1,0,1,1)
+          love.graphics.rectangle('line',decos[i].x * PPM * BLOCKSIZE - rafUtils.camera.x,decos[i].y * PPM * BLOCKSIZE - rafUtils.camera.y,BLOCKSIZE* PPM,BLOCKSIZE*PPM*3)
           love.graphics.setColor(1,1,1,1)
         end
       end
@@ -710,9 +793,9 @@ end
 function dropBomb(x,y)
   local dist = 2
   local startX = (x - dist-2)
-  local endX = (x + dist)
+  local endX = (x + dist+1)
   local startY = (y - dist-2)
-  local endY = (y + dist)
+  local endY = (y + dist+1)
 
   startY = rafUtils.clamp(startY,0,#terrain)
   startX = rafUtils.clamp(startX,0,#terrain[startY])

@@ -34,8 +34,8 @@ rafUtils.camera.lookAt = function(x,y)
     rafUtils.camera.x = x*PPM*BLOCKSIZE-WTWIDTH*0.5*PPM*BLOCKSIZE
     rafUtils.camera.y = y*PPM*BLOCKSIZE-WTHEIGHT*0.5*PPM*BLOCKSIZE
   else
-    rafUtils.camera.x = rafUtils.lerp(rafUtils.camera.x, x*PPM*BLOCKSIZE-WTWIDTH*0.5*PPM*BLOCKSIZE , 0.05)
-    rafUtils.camera.y = rafUtils.lerp(rafUtils.camera.y, y*PPM*BLOCKSIZE-WTHEIGHT*0.5*PPM*BLOCKSIZE, 0.05)
+    rafUtils.camera.x = rafUtils.lerp(rafUtils.camera.x, x*PPM*BLOCKSIZE-WTWIDTH*0.5*PPM*BLOCKSIZE , 0.05*0.25*PPM)
+    rafUtils.camera.y = rafUtils.lerp(rafUtils.camera.y, y*PPM*BLOCKSIZE-WTHEIGHT*0.5*PPM*BLOCKSIZE, 0.05*0.25*PPM)
   end
   rafUtils.camera.x = rafUtils.clamp(rafUtils.camera.x,0,(WORLDWIDTH*PPM*BLOCKSIZE)-(WTWIDTH*PPM*BLOCKSIZE))
   rafUtils.camera.y = rafUtils.clamp(rafUtils.camera.y,0,(WORLDHEIGHT*PPM*BLOCKSIZE)-(WTHEIGHT*PPM*BLOCKSIZE))
@@ -51,7 +51,7 @@ rafUtils.isCollide = function (ent1,ent2)
 end
 
 rafUtils.distance = function( x1,y1, x2,y2 )
-  return math.sqrt( (x2-x1)^2 + (y2-y1)^2 )
+  return math.abs(math.sqrt( (x2-x1)^2 + (y2-y1)^2 ))
 end
 
 rafUtils.isCollideRec = function (x1, y1, width1, height1, x2, y2, width2, height2)
