@@ -10,6 +10,8 @@ source: [rogueBassin](http://www.roguebasin.com/index.php?title=Cellular_Automat
 
 source: [dev tuts auto-tile](https://gamedevelopment.tutsplus.com/tutorials/how-to-use-tile-bitmasking-to-auto-tile-your-level-layouts--cms-25673)
 
+Tileset created by: [Colin Brown](http://www.brownillustration.com/)
+
 ![Yeah bomb](https://github.com/r-sede/loveCellular/raw/master/assets/img/readMe/animGif.gif ' bomb !!')
 
 ![fullMap zoom-out](https://github.com/r-sede/loveCellular/raw/master/assets/img/readMe/mapScreen.jpg ':v')
@@ -25,7 +27,7 @@ source: [dev tuts auto-tile](https://gamedevelopment.tutsplus.com/tutorials/how-
 - [ ] bomb must destroy torchs + deco ..
 - [ ] create stats n inventory for our old Men
 - [x] lerp Camera except on edges
-- [ ] add menu to title screen (play/scores)
+- [ ] add menu, title screen (play/scores)
 - [x] add explosion effects (shake, smoket etc .)
 - [ ] find a better way to handle, map layers, obstacles etc...
 - [ ] better looking Fog of war 
