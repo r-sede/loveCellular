@@ -11,6 +11,7 @@ hero.frame = 0
 hero.direction = 'walkUp'
 hero.fps = 1/5
 hero.animTimer = 1/5
+hero.debug = false
 
 hero.sprite.walkUp = {}
 hero.sprite.walkUp[0] = love.graphics.newQuad(0*16, 0*16, 16, 16, hero.atlas:getDimensions())
@@ -69,28 +70,22 @@ hero.update = function(this,dt)
   hero.vx,hero.vy = 0,0
   this.idle = false
 
---[[   if this.direction ~= 'walkLeft' then
-    this.direction = 'walkLeft'
-    this.frame = 0
-    this.fps = 1/5
+  if love.keyboard.isDown('up') then
+    this.direction = 'walkUp'
+    this.vy =  -1
   end
- ]]
- if love.keyboard.isDown('up') then
-  this.direction = 'walkUp'
-  this.vy =  -1
-end
-if love.keyboard.isDown('down') then
-  this.direction = 'walkDown'
-  this.vy = 1
-end
-if love.keyboard.isDown('left') then
-  this.direction = 'walkLeft'
-  this.vx =  -1
-end
-if love.keyboard.isDown('right') then
-  this.direction = 'walkRight'
-  this.vx =  1
-end
+  if love.keyboard.isDown('down') then
+    this.direction = 'walkDown'
+    this.vy = 1
+  end
+  if love.keyboard.isDown('left') then
+    this.direction = 'walkLeft'
+    this.vx =  -1
+  end
+  if love.keyboard.isDown('right') then
+    this.direction = 'walkRight'
+    this.vx =  1
+  end
 
   if this.lastVx ~= this.vx or this.lastVy ~= this.vy then
     this.frame = 0
@@ -118,7 +113,7 @@ end
   then
     return
   end ]]
-  local dist = 2
+  local dist = 1
   local startX = rafUtils.round(this.x - dist)
   local endX = rafUtils.round(this.x + dist)
   local startY = rafUtils.round(this.y - dist)
@@ -129,22 +124,22 @@ end
   endY = rafUtils.clamp(endY,0,#terrain)
   endX = rafUtils.clamp(endX,0,#terrain)
 
-  local col = false
   for yy = startY,endY do
     for xx = startX,endX do
-      
-
       if terrain[yy][xx] == 1 
       or terrain[yy][xx] == 257
       or terrain[yy][xx] == 256
       or terrain[yy][xx] == 28
       or terrain[yy][xx] == 199
       or terrain[yy][xx] == 255
+      or terrain[yy][xx] == 167
+      or terrain[yy][xx] == 156
       or terrain[yy][xx] == 135
       or terrain[yy][xx] == 143
       or terrain[yy][xx] == 207
       or terrain[yy][xx] == 31
       or terrain[yy][xx] == 30
+      or terrain[yy][xx] == 183
       or terrain[yy][xx] == 62
       or terrain[yy][xx] == 231
       or terrain[yy][xx] == 124
@@ -157,7 +152,7 @@ end
         local cx,cy,cwidth,cheight = this:getLeftColl()
         if rafUtils.isCollideRec(cx,cy,cwidth,cheight,xx*BLOCKSIZE*PPM, yy*BLOCKSIZE*PPM, BLOCKSIZE*PPM, BLOCKSIZE*PPM) then
           this.vx = 0
-          this.x = xx + 0.805 
+          this.x = xx + 0.825 
           return
         end
         cx,cy,cwidth,cheight = this:getRightColl()
@@ -196,19 +191,21 @@ hero.draw = function(this)
   0,PPM*0.5,PPM*0.5)
 
   --bottom
-  love.graphics.setColor(1,0,1,1)
-  local x,y,w,h = hero:getBootomColl()
-  love.graphics.rectangle('line',x-rafUtils.camera.x,y-rafUtils.camera.y,w,h)
-  --up
-
-  x,y,w,h = hero:getUpColl()
-  love.graphics.rectangle('line',x-rafUtils.camera.x,y-rafUtils.camera.y,w,h)
-
-  x,y,w,h = hero:getLeftColl()
-  love.graphics.rectangle('line',x-rafUtils.camera.x,y-rafUtils.camera.y,w,h)
-
-  x,y,w,h = hero:getRightColl()
-  love.graphics.rectangle('line',x-rafUtils.camera.x,y-rafUtils.camera.y,w,h)
-
-  love.graphics.setColor(1,1,1,1)
+  if hero.debug then
+    love.graphics.setColor(1,0,1,1)
+    local x,y,w,h = hero:getBootomColl()
+    love.graphics.rectangle('line',x-rafUtils.camera.x,y-rafUtils.camera.y,w,h)
+    --up
+    
+    x,y,w,h = hero:getUpColl()
+    love.graphics.rectangle('line',x-rafUtils.camera.x,y-rafUtils.camera.y,w,h)
+    
+    x,y,w,h = hero:getLeftColl()
+    love.graphics.rectangle('line',x-rafUtils.camera.x,y-rafUtils.camera.y,w,h)
+    
+    x,y,w,h = hero:getRightColl()
+    love.graphics.rectangle('line',x-rafUtils.camera.x,y-rafUtils.camera.y,w,h)
+    
+    love.graphics.setColor(1,1,1,1)
+  end
 end
