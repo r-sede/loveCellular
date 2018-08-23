@@ -59,15 +59,15 @@ function love.load(arg)
   TILES[60] = TILES[28]
   TILES[30] = TILES[28]
   TILES[62] = TILES[28]
-  TILES[188] = TILES[28]
-  TILES[156] = TILES[28]
+  TILES[188] = TILES[28]--
+  TILES[156] = TILES[28]--
   
   TILES[15] = love.graphics.newQuad(12*8, 8*8, 8, 8, ATLAS:getDimensions())
   TILES[135] = TILES[15]
   TILES[7] = TILES[15]
-  TILES[183] = TILES[15]
+  TILES[183] = TILES[15]--
   TILES[143] = TILES[15]
-  TILES[167] = TILES[15]
+  TILES[167] = TILES[15]--
 
   TILES[127] = love.graphics.newQuad(16*8, 6*8, 8, 8, ATLAS:getDimensions())
 
@@ -82,10 +82,10 @@ function love.load(arg)
   TILES[225] = TILES[193]
   TILES[227] = TILES[193]
   TILES[195] = TILES[193]
-  TILES[203] = TILES[193]
-  TILES[201] = TILES[193]
-  TILES[217] = TILES[193]
-  TILES[233] = TILES[193]
+  TILES[203] = TILES[193]--
+  TILES[201] = TILES[193]--
+  TILES[217] = TILES[193]--
+  TILES[233] = TILES[193]--
 
   TILES[247] = love.graphics.newQuad(11*8, 10*8, 8, 8, ATLAS:getDimensions())
   --------------------------------------------------
@@ -102,7 +102,7 @@ function love.load(arg)
   TILES[240] = TILES[248]
   TILES[120] = TILES[248]
   TILES[112] = TILES[248]
-  TILES[122] = TILES[248]
+  TILES[122] = TILES[248]--
   
   TILES[124] = love.graphics.newQuad(16*8, 7*8, 8, 8, ATLAS:getDimensions())
   TILES[126] = TILES[124]

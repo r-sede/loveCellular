@@ -132,14 +132,11 @@ hero.update = function(this,dt)
       or terrain[yy][xx] == 28
       or terrain[yy][xx] == 199
       or terrain[yy][xx] == 255
-      or terrain[yy][xx] == 167
-      or terrain[yy][xx] == 156
       or terrain[yy][xx] == 135
       or terrain[yy][xx] == 143
       or terrain[yy][xx] == 207
       or terrain[yy][xx] == 31
       or terrain[yy][xx] == 30
-      or terrain[yy][xx] == 183
       or terrain[yy][xx] == 62
       or terrain[yy][xx] == 231
       or terrain[yy][xx] == 124
@@ -148,6 +145,9 @@ hero.update = function(this,dt)
       or terrain[yy][xx] == 252
       or terrain[yy][xx] == 253
       or terrain[yy][xx] == 247
+      or terrain[yy][xx] == 167--
+      or terrain[yy][xx] == 156--
+      or terrain[yy][xx] == 183--
       or terrain[yy][xx] == 156  then 
         local cx,cy,cwidth,cheight = this:getLeftColl()
         if rafUtils.isCollideRec(cx,cy,cwidth,cheight,xx*BLOCKSIZE*PPM, yy*BLOCKSIZE*PPM, BLOCKSIZE*PPM, BLOCKSIZE*PPM) then
