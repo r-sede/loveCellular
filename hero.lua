@@ -137,6 +137,11 @@ hero.update = function(this,dt)
       or terrain[yy][xx] == 207
       or terrain[yy][xx] == 31
       or terrain[yy][xx] == 30
+      or terrain[yy][xx] == 15 --
+      or terrain[yy][xx] == 47 --
+      or terrain[yy][xx] == 39 --
+      or terrain[yy][xx] == 175 --
+      or terrain[yy][xx] == 158
       or terrain[yy][xx] == 62
       or terrain[yy][xx] == 231
       or terrain[yy][xx] == 124

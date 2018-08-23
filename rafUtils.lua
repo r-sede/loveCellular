@@ -26,10 +26,17 @@ end
   if(val%1 >=0.5 ) then return floor+1 end
   return floor
 end
-
+rafUtils.lerp = function(a, b, t)
+  return a + (b - a) * t
+end
 rafUtils.camera.lookAt = function(x,y)
-  rafUtils.camera.x = x*PPM*BLOCKSIZE-WTWIDTH*0.5*PPM*BLOCKSIZE
-  rafUtils.camera.y = y*PPM*BLOCKSIZE-WTHEIGHT*0.5*PPM*BLOCKSIZE
+  if x < 2 or x > #terrain[0] -2 or y < 2 or y >#terrain - 2 then
+    rafUtils.camera.x = x*PPM*BLOCKSIZE-WTWIDTH*0.5*PPM*BLOCKSIZE
+    rafUtils.camera.y = y*PPM*BLOCKSIZE-WTHEIGHT*0.5*PPM*BLOCKSIZE
+  else
+    rafUtils.camera.x = rafUtils.lerp(rafUtils.camera.x, x*PPM*BLOCKSIZE-WTWIDTH*0.5*PPM*BLOCKSIZE , 0.05)
+    rafUtils.camera.y = rafUtils.lerp(rafUtils.camera.y, y*PPM*BLOCKSIZE-WTHEIGHT*0.5*PPM*BLOCKSIZE, 0.05)
+  end
   rafUtils.camera.x = rafUtils.clamp(rafUtils.camera.x,0,(WORLDWIDTH*PPM*BLOCKSIZE)-(WTWIDTH*PPM*BLOCKSIZE))
   rafUtils.camera.y = rafUtils.clamp(rafUtils.camera.y,0,(WORLDHEIGHT*PPM*BLOCKSIZE)-(WTHEIGHT*PPM*BLOCKSIZE))
   

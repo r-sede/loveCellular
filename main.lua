@@ -39,7 +39,7 @@ local bombTiles = {}
 local bombTimer = 1/3
 local bombFps = 1/3
 local bombFrame = 0
-local bomb = {x=-100,y=-100}
+local bombs = {}
 
 
 function love.load(arg)
@@ -76,9 +76,11 @@ function love.load(arg)
   TILES[28] = love.graphics.newQuad(16*8+colorGB*256, 8*8, 8, 8, ATLAS:getDimensions())
   TILES[60] = TILES[28]
   TILES[30] = TILES[28]
+  TILES[158] = TILES[28]--
   TILES[62] = TILES[28]
   TILES[188] = TILES[28]--
   TILES[156] = TILES[28]--
+  TILES[190] = TILES[28]--
   
   TILES[15] = love.graphics.newQuad(12*8+colorGB*256, 8*8, 8, 8, ATLAS:getDimensions())
   TILES[135] = TILES[15]
@@ -86,6 +88,9 @@ function love.load(arg)
   TILES[183] = TILES[15]--
   TILES[143] = TILES[15]
   TILES[167] = TILES[15]--
+  TILES[47] = TILES[15]--
+  TILES[39] = TILES[15]--
+  TILES[175] = TILES[15]--
 
   TILES[127] = love.graphics.newQuad(16*8+colorGB*256, 6*8, 8, 8, ATLAS:getDimensions())
 
@@ -121,6 +126,7 @@ function love.load(arg)
   TILES[120] = TILES[248]
   TILES[112] = TILES[248]
   TILES[122] = TILES[248]--
+  TILES[242] = TILES[248]--
   
   TILES[124] = love.graphics.newQuad(16*8+colorGB*256, 7*8, 8, 8, ATLAS:getDimensions())
   TILES[126] = TILES[124]
@@ -172,6 +178,7 @@ function love.draw()
           if terrain[yy][xx] ~= 225
           and terrain[yy][xx] ~= 241
           and terrain[yy][xx] ~= 112
+          and terrain[yy][xx] ~= 242
           and terrain[yy][xx] ~= 122
           and terrain[yy][xx] ~= 203
           and terrain[yy][xx] ~= 201
@@ -196,7 +203,8 @@ function love.draw()
   drawTorch (startX, endX, startY, endY)
   drawChest (startX, endX, startY, endY)
   --testBomb
-  love.graphics.draw(bombAtlas,bombTiles[bombFrame],bomb.x*BLOCKSIZE*PPM - rafUtils.camera.x, bomb.y*BLOCKSIZE*PPM - rafUtils.camera.y,PPM*0.5,PPM*0.5)
+  drawBomb(startX, endX, startY, endY)
+  --love.graphics.draw(bombAtlas,bombTiles[bombFrame],bomb.x*BLOCKSIZE*PPM - rafUtils.camera.x, bomb.y*BLOCKSIZE*PPM - rafUtils.camera.y,PPM*0.5,PPM*0.5)
   --hero
   hero:draw()
  
@@ -208,6 +216,7 @@ function love.draw()
         if  TILES[terrain[yy][xx]] ~= nil then
           if terrain[yy][xx] == 225
           or terrain[yy][xx] == 241
+          or terrain[yy][xx] == 242
           or terrain[yy][xx] == 112
           or terrain[yy][xx] == 122
           or terrain[yy][xx] == 203
@@ -274,7 +283,8 @@ function love.keypressed (key)
   end
   if key == 'b' then
     -- print(SEED)
-    dropBomb(math.ceil(hero.x+1),math.ceil(hero.y))
+    table.insert(bombs, {x=math.ceil(hero.x+1),y=math.ceil(hero.y), coolD=4,active = true})
+    --dropBomb(math.ceil(hero.x+1),math.ceil(hero.y))
   end
   if key == "s" then 
     SEED = love.timer.getTime()
@@ -459,7 +469,7 @@ end
 
 function drawChest (startX, endX, startY, endY)
   for i=1,#chests do
-    if chests[i].x >= startX and chests[i].x < endX and chests[i].y > startY-3 and chests[i].y < endY then
+    if chests[i].x >= startX and chests[i].x < endX and chests[i].y > startY-1 and chests[i].y < endY then
       if fog[chests[i].y][chests[i].x] == 0 then
         love.graphics.draw(ATLAS,OBJTILES['chest'][chests[i].frame],chests[i].x * PPM * BLOCKSIZE - rafUtils.camera.x,chests[i].y * PPM * BLOCKSIZE - rafUtils.camera.y,0,PPM,PPM)
         if debug then
@@ -477,6 +487,33 @@ function updateBomb(dt)
   if bombTimer <= 0 then
     bombFrame = (bombFrame + 1)%(#bombTiles+1)
     bombTimer = bombFps
+  end
+  for i=1,#bombs do
+    bombs[i].coolD = bombs[i].coolD - dt
+    if bombs[i].coolD <= 0 then
+      dropBomb(bombs[i].x, bombs[i].y)
+      bombs[i].active = false
+    end
+  end
+  for i=#bombs,1,-1 do
+    if bombs[i].active == false then
+      table.remove( bombs, i )
+    end
+  end
+end
+
+function drawBomb(startX, endX, startY, endY)
+  for i=1,#bombs do
+    if bombs[i].x >= startX and bombs[i].x < endX and bombs[i].y > startY-1 and bombs[i].y < endY then
+      if fog[bombs[i].y][bombs[i].x] == 0 then
+        love.graphics.draw(bombAtlas,bombTiles[bombFrame],bombs[i].x*BLOCKSIZE*PPM - rafUtils.camera.x, bombs[i].y*BLOCKSIZE*PPM - rafUtils.camera.y,PPM*0.5,PPM*0.5)
+        if debug then
+          love.graphics.setColor(1,0,1,1)
+          love.graphics.rectangle('line',bombs[i].x * PPM * BLOCKSIZE - rafUtils.camera.x,bombs[i].y * PPM * BLOCKSIZE - rafUtils.camera.y,BLOCKSIZE* PPM,BLOCKSIZE*PPM)
+          love.graphics.setColor(1,1,1,1)
+        end
+      end
+    end 
   end
 end
 
@@ -643,6 +680,11 @@ function createWall3(terrain)
     for xx=0,#terrain[yy] do
       if  terrain[yy][xx] == 31 or
           terrain[yy][xx] == 191 or
+          terrain[yy][xx] == 39 or--
+          terrain[yy][xx] == 175 or--
+          terrain[yy][xx] == 167 or--
+          terrain[yy][xx] == 158 or--
+          terrain[yy][xx] == 188 or--
           terrain[yy][xx] == 63 or
           terrain[yy][xx] == 159 or
           terrain[yy][xx] == 135 or
@@ -666,7 +708,6 @@ function createWall3(terrain)
 end
 
 function dropBomb(x,y)
-  bomb.x,bomb.y = x,y
   local dist = 2
   local startX = (x - dist-2)
   local endX = (x + dist)
@@ -763,7 +804,7 @@ function dropBomb(x,y)
     end
   end
 
-  for yy=startY,endY do
+--[[   for yy=startY,endY do
     for xx=startX,endX do
       if terrain[yy][xx] == 0 then
         local rand = love.math.random()
@@ -776,12 +817,17 @@ function dropBomb(x,y)
         end
       end
     end
-  end
+  end ]]
 
   for yy=startY,endY do
     for xx=startX,endX do
       if  terrain[yy][xx] == 31 or
           terrain[yy][xx] == 191 or
+          terrain[yy][xx] == 39 or--
+          terrain[yy][xx] == 175 or--
+          terrain[yy][xx] == 167 or--
+          terrain[yy][xx] == 158 or--
+          terrain[yy][xx] == 188 or--
           terrain[yy][xx] == 63 or
           terrain[yy][xx] == 159 or
           terrain[yy][xx] == 135 or
