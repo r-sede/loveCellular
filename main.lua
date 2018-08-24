@@ -7,13 +7,16 @@ local SWIDTH = 1024--640--*2 -- screen width in pixels
 local SHEIGHT = 768--576--*2 -- screen height in pixels
 WTWIDTH = SWIDTH/(BLOCKSIZE*PPM) -- number of blocks on screen along x
 WTHEIGHT = SHEIGHT/(BLOCKSIZE*PPM) -- number of blocks on screen along y
-WORLDWIDTH = 256*2 -- width of world in block
-WORLDHEIGHT = 256*2 -- height of world in block
+WORLDWIDTH = 128*8 -- width of world in block
+WORLDHEIGHT = 128*8 -- height of world in block
 local TILES = {}
 local ATLAS = nil
 local SEED = nil
 
+local backMusic = nil
 rafUtils = require"rafUtils"
+
+
 local rRockCells = 0.48
 local nIter =11
 local startIter = 11
@@ -42,7 +45,7 @@ local bombFrame = 0
 local bombs = {}
 
 local decos = nil
-local densDeco = 28
+local densDeco = 1
 
 
 function love.load(arg)
@@ -159,7 +162,9 @@ function love.load(arg)
   OBJTILES['deco'][3] = love.graphics.newQuad(10*8+colorGB*256, 13*8,8,8*3,ATLAS:getDimensions())
 
 
-
+  --backMusic = love.audio.newSource('assets/music/cloudMoonLoop.wav', 'stream')
+  --backMusic:setLooping(true)
+  --backMusic:play()
 end
 
 function love.update(dt)
@@ -295,7 +300,15 @@ function love.keypressed (key)
   if key == 'b' then
     -- print(SEED)
     table.insert(bombs, {x=rafUtils.round(hero.x),y=rafUtils.round(hero.y), coolD=4,active = true})
-    --dropBomb(math.ceil(hero.x+1),math.ceil(hero.y))
+
+  -- rien ne vas plus
+--[[     for yy=0,#terrain do
+      for xx=0,#terrain[yy] do
+        if terrain[yy][xx] == 0 then
+          table.insert(bombs, {x=xx,y=yy, coolD=3,active = true})
+        end
+      end
+    end ]]
   end
   if key == "s" then 
     SEED = love.timer.getTime()
@@ -327,7 +340,7 @@ function resetMap()
 
   torchs = createTorchs(terrain,densTorch)
   decos = createDecos(terrain,densDeco)
-  while torchs == false or decos == false do
+  while torchs == false  or decos == false  do
     densTorch = densTorch - 1
     densDeco = densDeco - 1
     SEED = love.timer.getTime()    
@@ -586,6 +599,7 @@ function createDecos (terrain,dens)
 end
 
 function drawDeco(startX, endX, startY, endY)
+  if #decos<=0 then return end
   for i=1,#decos do
     if decos[i].x >= startX and decos[i].x < endX and decos[i].y > startY-1 and decos[i].y < endY then
       if fog[decos[i].y][decos[i].x] == 0 then
