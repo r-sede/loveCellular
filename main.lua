@@ -34,7 +34,7 @@ local densTorch = 28
 local torchs = nil
 
 local chests = nil
-local densChest = 2
+local densChest = 1
 local colorGB = 4
 
 local bombAtlas = nil
@@ -45,7 +45,7 @@ local bombFrame = 0
 local bombs = {}
 
 local decos = nil
-local densDeco = 1
+local densDeco = 2
 
 
 function love.load(arg)
@@ -205,7 +205,9 @@ function love.draw()
           and terrain[yy][xx] ~= 193
           and terrain[yy][xx] ~= 249
           and terrain[yy][xx] ~= 243
+          and terrain[yy][xx] ~= 253
           and terrain[yy][xx] ~= 251
+          and terrain[yy][xx] ~= 247--
           and terrain[yy][xx] ~= 248
           and terrain[yy][xx] ~= 227 then
             love.graphics.draw(ATLAS,TILES[terrain[yy][xx]],xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,0,PPM,PPM)
@@ -247,6 +249,8 @@ function love.draw()
           or terrain[yy][xx] == 249
           or terrain[yy][xx] == 243
           or terrain[yy][xx] == 251
+          or terrain[yy][xx] == 247
+          or terrain[yy][xx] == 253
           or terrain[yy][xx] == 227 then
             love.graphics.draw(ATLAS,TILES[terrain[yy][xx]],xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,0,PPM,PPM)
             --love.graphics.rectangle('line',xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,PPM*BLOCKSIZE,PPM*BLOCKSIZE)
@@ -299,7 +303,7 @@ function love.keypressed (key)
   end
   if key == 'b' then
     -- print(SEED)
-    table.insert(bombs, {x=rafUtils.round(hero.x),y=rafUtils.round(hero.y), coolD=4,active = true})
+    table.insert(bombs, {x=rafUtils.round(hero.x),y=rafUtils.round(hero.y), coolD=3,active = true})
 
   -- rien ne vas plus
 --[[     for yy=0,#terrain do
@@ -397,17 +401,13 @@ function createTorchs(terrain, dens)
         if terrain[ytent][xtent] == 31 and terrain[ytent][xtent+1] == 31 then
           local notFound = true
           for i=1,#torchPlacedX do
-            if  rafUtils.distance(xtent,ytent,torchPlacedX[i].x,torchPlacedX[i].y) < 3 then
+            if  rafUtils.distance(xtent,ytent,torchPlacedX[i].x,torchPlacedX[i].y) < 4 then
               notFound = false
             end
           end
-      --[[print()
-          print(xtent)
-          print(ytent)
-          print() ]]
+
           if notFound then
             table.insert( res, {x=xtent,y=ytent} )
-            --print(xtent)
             table.insert(torchPlacedX,{x=xtent,y=ytent})
             d = d -1
           end
@@ -480,13 +480,8 @@ function createChest(terrain,dens)
               notFound = false
             end
           end
-      --[[print()
-          print(xtent)
-          print(ytent)
-          print() ]]
           if notFound then
             table.insert( res, {x=xtent,y=ytent,open=false,inside={'lol'},frame=0} )
-            --print(xtent)
             table.insert(chestPlacedX,{x=xtent,y=ytent})
             terrain[ytent][xtent] = 1
             d = d -1
@@ -502,7 +497,7 @@ function drawChest (startX, endX, startY, endY)
   for i=1,#chests do
     if chests[i].x >= startX and chests[i].x < endX and chests[i].y > startY-1 and chests[i].y < endY then
       if fog[chests[i].y][chests[i].x] == 0 then
-        love.graphics.draw(ATLAS,OBJTILES['chest'][chests[i].frame],chests[i].x * PPM * BLOCKSIZE - rafUtils.camera.x,chests[i].y * PPM * BLOCKSIZE - rafUtils.camera.y,0,PPM,PPM)
+        love.graphics.draw(ATLAS,OBJTILES['chest'][chests[i].frame], chests[i].x * PPM * BLOCKSIZE - rafUtils.camera.x,chests[i].y * PPM * BLOCKSIZE - rafUtils.camera.y,0,PPM,PPM)
         if debug then
           love.graphics.setColor(1,0,1,1)
           love.graphics.rectangle('line',chests[i].x * PPM * BLOCKSIZE - rafUtils.camera.x,chests[i].y * PPM * BLOCKSIZE - rafUtils.camera.y,BLOCKSIZE* PPM,BLOCKSIZE*PPM)
@@ -523,9 +518,11 @@ function updateBomb(dt)
     bombs[i].coolD = bombs[i].coolD - dt
     if bombs[i].coolD <= 0 then
       dropBomb(bombs[i].x, bombs[i].y)
+      --add particle, sound, shake
       bombs[i].active = false
     end
   end
+  --clean
   for i=#bombs,1,-1 do
     if bombs[i].active == false then
       table.remove( bombs, i )
@@ -580,14 +577,8 @@ function createDecos (terrain,dens)
               end
             end
           end
-            --[[print()
-          print(xtent)
-          print(ytent)
-          print() ]]
           if notFound then
-            
             table.insert( res, {x=xtent,y=ytent,type=love.math.random(0,3)} )
-            --print(xtent)
             table.insert(decoPlacedX,{x=xtent,y=ytent})
             d = d -1
           end
@@ -781,6 +772,7 @@ function createWall3(terrain)
           terrain[yy][xx] == 175 or--
           terrain[yy][xx] == 167 or--
           terrain[yy][xx] == 158 or--
+          terrain[yy][xx] == 156 or--
           terrain[yy][xx] == 188 or--
           terrain[yy][xx] == 63 or
           terrain[yy][xx] == 159 or
@@ -792,12 +784,18 @@ function createWall3(terrain)
           terrain[yy][xx] == 60 or
           terrain[yy][xx] == 30 or
           terrain[yy][xx] == 62 then
-        if yy <= #terrain -2 then 
-          terrain[yy+1][xx] = 256
-          terrain[yy+2][xx] = 257
-        elseif yy <= #terrain -1 then 
-          terrain[yy+1][xx] = 256
-        end
+          if yy <= #terrain -2 then
+            if terrain [yy+1][xx] <= 0 then
+              terrain[yy+1][xx] = 256
+            end
+            if terrain [yy+2][xx] <= 0 then
+              terrain[yy+2][xx] = 257
+            end
+          elseif yy <= #terrain -1 then 
+            if terrain [yy+1][xx] <= 0 then
+              terrain[yy+1][xx] = 256
+            end
+          end
       end
     end
   end
@@ -810,18 +808,50 @@ function dropBomb(x,y)
   local endX = (x + dist+1)
   local startY = (y - dist-2)
   local endY = (y + dist+1)
-
+  local destChest = {}
+  
   startY = rafUtils.clamp(startY,0,#terrain)
   startX = rafUtils.clamp(startX,0,#terrain[startY])
   endY = rafUtils.clamp(endY,0,#terrain)
   endX = rafUtils.clamp(endX,0,#terrain[endY])
-
+  
   for yy = startY,endY do
     for xx = startX,endX do
-      terrain [yy][xx] = 0
+
+      if terrain[yy][xx] > 0 then
+        terrain [yy][xx] = 0
+        for i=1,#chests do
+          if chests[i].x == xx and chests[i].y == yy then
+            table.insert(destChest,{x=xx;y=yy})
+          end
+        end
+      end
+
+      for i=#torchs,1,-1 do
+        if rafUtils.isCollideRec(xx,yy,1,1,torchs[i].x,torchs[i].y,0.2,0.3) then
+          table.remove(torchs, i)
+        end
+      end
+      for i=#decos,1,-1 do
+        if rafUtils.isCollideRec(xx,yy,1,1,decos[i].x,decos[i].y,1,3) then
+          table.remove(decos, i)
+        end
+      end
     end
   end
 
+  
+  -- for yy=rafUtils.clamp(startY-2,0,#terrain),rafUtils.clamp(endY+2,0,#terrain) do
+  --   for xx=rafUtils.clamp(startX-2,0,#terrain[startY]),rafUtils.clamp(endX+2,0,#terrain[endY]) do
+  --     if terrain[yy][xx] == 256 or terrain[yy][xx] == 257 then
+  --       --print('walll')
+  --       terrain[yy][xx] = 0
+  --     end
+  --   end
+  -- end
+
+  
+  
   startY = rafUtils.clamp(startY-3,0,#terrain)
   startX = rafUtils.clamp(startX-3,0,#terrain[startY])
   endY = rafUtils.clamp(endY+3,0,#terrain)
@@ -856,13 +886,13 @@ function dropBomb(x,y)
       end
     end
   end
-
+  
   for yy=startY,endY do
     for xx=startX,endX do
       terrain[yy][xx]=tmp[yy][xx]
     end
   end
-
+  
   tmp = {}
   for yy=startY,endY do
     tmp[yy] = {}
@@ -901,20 +931,6 @@ function dropBomb(x,y)
     end
   end
 
---[[   for yy=startY,endY do
-    for xx=startX,endX do
-      if terrain[yy][xx] == 0 then
-        local rand = love.math.random()
-        if rand < 0.005 then  
-          terrain[yy][xx]=-1
-        elseif rand < 0.01 then
-          terrain[yy][xx]=-2
-        else
-          terrain[yy][xx]=0
-        end
-      end
-    end
-  end ]]
 
   for yy=startY,endY do
     for xx=startX,endX do
@@ -924,6 +940,7 @@ function dropBomb(x,y)
           terrain[yy][xx] == 175 or--
           terrain[yy][xx] == 167 or--
           terrain[yy][xx] == 158 or--
+          terrain[yy][xx] == 156 or--
           terrain[yy][xx] == 188 or--
           terrain[yy][xx] == 63 or
           terrain[yy][xx] == 159 or
@@ -935,14 +952,25 @@ function dropBomb(x,y)
           terrain[yy][xx] == 60 or
           terrain[yy][xx] == 30 or
           terrain[yy][xx] == 62 then
-        if yy <= #terrain -2 then 
-          terrain[yy+1][xx] = 256
-          terrain[yy+2][xx] = 257
+        if yy <= #terrain -2 then
+          if terrain [yy+1][xx] <= 0 then
+            terrain[yy+1][xx] = 256
+          end
+          if terrain [yy+2][xx] <= 0 then
+            terrain[yy+2][xx] = 257
+          end
         elseif yy <= #terrain -1 then 
-          terrain[yy+1][xx] = 256
+          if terrain [yy+1][xx] <= 0 then
+            terrain[yy+1][xx] = 256
+          end
         end
       end
     end
   end
+
+  for i=1,#destChest do
+    terrain[destChest[i].y][destChest[i].x] = 1
+  end
+  
 
 end
