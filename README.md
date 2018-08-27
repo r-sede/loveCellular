@@ -49,9 +49,11 @@ Tileset created by: [Colin Brown](http://www.brownillustration.com/)
 
 **t:** toggle fog of war (effect on next reset)
 
+**lshift + Wheel:** zoom
+
 **s:** gen a new Seed
 
-**r:** reset the dungeon (reset a Seed before to gen a new Dungeon )
+**return:** reset the dungeon (reset a Seed before to gen a new Dungeon )
 
 ---
 
