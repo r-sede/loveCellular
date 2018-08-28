@@ -24,7 +24,7 @@ Tileset created by: [Colin Brown](http://www.brownillustration.com/)
 - [ ] detect start in small closed room :/
 - [ ] add other entities
 - [ ] add Fx/Music
-- [ ] bomb must destroy torchs + deco ..
+- [x] bomb must destroy torchs + deco ..
 - [ ] create stats n inventory for our old Men
 - [x] lerp Camera except on edges
 - [ ] add menu, title screen (play/scores)
@@ -47,11 +47,11 @@ Tileset created by: [Colin Brown](http://www.brownillustration.com/)
 
 **t:** toggle tiles id
 
-**t:** toggle fog of war (effect on next reset)
+**f:** toggle fog of war (effect on next reset)
 
 **s:** gen a new Seed
 
-**r:** reset the dungeon (reset a Seed before to gen a new Dungeon )
+**return:** reset the dungeon (reset a Seed before to gen a new Dungeon )
 
 ---
 

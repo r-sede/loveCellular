@@ -7,15 +7,14 @@ local SWIDTH = 1024--640--*2 -- screen width in pixels
 local SHEIGHT = 768--576--*2 -- screen height in pixels
 WTWIDTH = SWIDTH/(BLOCKSIZE*PPM) -- number of blocks on screen along x
 WTHEIGHT = SHEIGHT/(BLOCKSIZE*PPM) -- number of blocks on screen along y
-WORLDWIDTH = 128*8 -- width of world in block
-WORLDHEIGHT = 128*8 -- height of world in block
+WORLDWIDTH = 128*4--*8 -- width of world in block
+WORLDHEIGHT = 128*4--*8 -- height of world in block
 local TILES = {}
 local ATLAS = nil
 local SEED = nil
 
 local backMusic = nil
 rafUtils = require"rafUtils"
-
 
 local rRockCells = 0.48
 local nIter =11
@@ -24,6 +23,7 @@ local neighBorHoodThres = 5
 terrain = nil
 local fog = nil
 local playerX,playerY = nil,nil
+local clickX,clickY = 0,0
 
 local OBJTILES = {}
 
@@ -45,8 +45,9 @@ local bombFrame = 0
 local bombs = {}
 
 local decos = nil
-local densDeco = 2
+local densDeco = 1
 
+local tp = false
 
 function love.load(arg)
   love.graphics.setDefaultFilter('nearest')
@@ -266,6 +267,13 @@ function love.draw()
           xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,
           BLOCKSIZE*PPM, BLOCKSIZE*PPM)
         end
+        if yy == clickY and xx == clickX then
+          love.graphics.setColor(0,1,0,1)
+          love.graphics.rectangle('fill',
+          xx*BLOCKSIZE*PPM - rafUtils.camera.x, yy*BLOCKSIZE*PPM - rafUtils.camera.y,
+          BLOCKSIZE*PPM, BLOCKSIZE*PPM)
+          love.graphics.setColor(1,1,1,1)
+        end
         love.graphics.setColor(1,1,1,1)
       end
     end
@@ -317,6 +325,13 @@ function love.keypressed (key)
   if key == "s" then 
     SEED = love.timer.getTime()
   end
+  if key == "p" then 
+    if tp == false then
+      tp = true
+    else
+      tp = false
+    end
+  end
 end
 
 function love.wheelmoved(a,dir)
@@ -325,10 +340,31 @@ function love.wheelmoved(a,dir)
     if PPM < 0.1 then PPM = 0.1 end
     WTWIDTH = SWIDTH/(BLOCKSIZE*PPM) -- number of blocks on screen along x
     WTHEIGHT = SHEIGHT/(BLOCKSIZE*PPM) -- number of blocks on screen along y
+    rafUtils.camera.x = hero.x * PPM * BLOCKSIZE - WTWIDTH * 0.5 * PPM * BLOCKSIZE
+    rafUtils.camera.y = hero.y * PPM * BLOCKSIZE - WTHEIGHT * 0.5 * PPM * BLOCKSIZE
   else
     startIter = startIter + dir
     if startIter < 1 then startIter = 1 end
   end
+end
+
+function love.mousepressed(x,y,btn)
+  if tp then
+    clickX = (x + rafUtils.camera.x) / BLOCKSIZE / PPM
+    clickY = (y + rafUtils.camera.y) / BLOCKSIZE / PPM
+    clickX = math.floor(clickX)
+    clickY = math.floor(clickY)
+  
+    if fog[clickY][clickX] == 0 and terrain[clickY][clickX] == 0 then
+      if tp then
+        hero.x = clickX
+        hero.y = clickY
+        tp = false
+      end
+    end
+  end
+  -- print(clickX,clickY)
+  -- print(playerX,playerY)
 end
 
 ---------------------------------
@@ -386,6 +422,7 @@ function createTorchs(terrain, dens)
    local it = WORLDWIDTH / 128
    for yyy = 0,it-1 do
     for xxx=0,it-1 do
+      --print('it: '..(yyy*128)..' : '..(yyy+1)*128)
       local d = dens
       local torchPlacedX = {}
       while d > 0 do
@@ -417,6 +454,7 @@ function createTorchs(terrain, dens)
   end
   return res
 end
+
 function updateTorch(dt)
   torchTimer = torchTimer - dt
   if torchTimer <= 0 then
@@ -424,6 +462,7 @@ function updateTorch(dt)
     torchTimer = torchFps
   end
 end
+
 function drawTorch (startX, endX, startY, endY)
   for i=1,#torchs do
     if torchs[i].x >= startX and torchs[i].x < endX and torchs[i].y > startY-3 and torchs[i].y < endY then
@@ -436,7 +475,7 @@ function drawTorch (startX, endX, startY, endY)
         love.graphics.draw(ATLAS,OBJTILES['torch'][torchFrame],torchs[i].x * PPM * BLOCKSIZE - rafUtils.camera.x,torchs[i].y * PPM * BLOCKSIZE - rafUtils.camera.y,0,PPM,PPM)
         if debug then 
           love.graphics.setColor(1,0,1,1)
-          love.graphics.rectangle('line',torchs[i].x * PPM * BLOCKSIZE - rafUtils.camera.x,torchs[i].y * PPM * BLOCKSIZE - rafUtils.camera.y,BLOCKSIZE* PPM *2,BLOCKSIZE*PPM*3)
+          love.graphics.rectangle('line',torchs[i].x * PPM * BLOCKSIZE - rafUtils.camera.x, torchs[i].y * PPM * BLOCKSIZE - rafUtils.camera.y,BLOCKSIZE* PPM *2,BLOCKSIZE*PPM*3)
           love.graphics.setColor(1,1,1,1)
         end
       end
@@ -481,7 +520,7 @@ function createChest(terrain,dens)
             end
           end
           if notFound then
-            table.insert( res, {x=xtent,y=ytent,open=false,inside={'lol'},frame=0} )
+            table.insert( res, {x=xtent,y=ytent, open=false,inside={'lol'},frame=0} )
             table.insert(chestPlacedX,{x=xtent,y=ytent})
             terrain[ytent][xtent] = 1
             d = d -1
@@ -617,6 +656,7 @@ function createFog (width,height)
   end
   return fog
 end
+
 function updateFog(dist)
   local startX = rafUtils.round(hero.x - dist)
   local endX = rafUtils.round(hero.x + dist)
@@ -637,16 +677,15 @@ end
 
 function createRandTerrain (width, height)
   local terrain,xx,yy = {},0,0
-
   for yy=0,height-1 do
     terrain[yy] = {}
     for xx=0,width-1 do
       terrain[yy][xx] = love.math.random() < rRockCells and 1 or 0
     end
   end
-
   return terrain
 end
+
 function iterCellular(terrain)
   local tmp = {}
 
@@ -801,7 +840,6 @@ function createWall3(terrain)
   end
   return terrain
 end
-
 function dropBomb(x,y)
   local dist = 2
   local startX = (x - dist-2)
@@ -820,20 +858,24 @@ function dropBomb(x,y)
 
       if terrain[yy][xx] > 0 then
         terrain [yy][xx] = 0
-        for i=1,#chests do
-          if chests[i].x == xx and chests[i].y == yy then
-            table.insert(destChest,{x=xx;y=yy})
-          end
-        end
       end
 
       for i=#torchs,1,-1 do
-        if rafUtils.isCollideRec(xx,yy,1,1,torchs[i].x,torchs[i].y,0.2,0.3) then
+         if rafUtils.isCollideRec(xx,yy,1,1,torchs[i].x,torchs[i].y,2,0.2) then
+          -- if terrain[torchs[i].y][torchs[i].x] ~= 31 or
+          -- terrain[torchs[i].y][torchs[i].x+1] ~= 31 or
+          -- terrain[torchs[i].y+1][torchs[i].x] ~= 256 or
+          -- terrain[torchs[i].y+1][torchs[i].x+1] ~= 256 or
+          -- terrain[torchs[i].y+2][torchs[i].x] ~= 257 or
+          -- terrain[torchs[i].y+2][torchs[i].x+1] ~= 257 then
           table.remove(torchs, i)
         end
       end
       for i=#decos,1,-1 do
-        if rafUtils.isCollideRec(xx,yy,1,1,decos[i].x,decos[i].y,1,3) then
+         if rafUtils.isCollideRec(xx,yy,1,1,decos[i].x,decos[i].y,1,0.2) then
+          -- if terrain[decos[i].y][decos[i].x] ~= 31 or
+          -- terrain[decos[i].y+1][decos[i].x] ~= 256 or
+          -- terrain[decos[i].y+2][decos[i].x] ~= 257 then
           table.remove(decos, i)
         end
       end
@@ -861,6 +903,12 @@ function dropBomb(x,y)
   for yy=startY,endY do
     tmp[yy] = {}
     for xx=startX,endX do
+      for i=1,#chests do
+        if chests[i].x == xx and chests[i].y == yy then
+          terrain[yy][xx] = 0
+          table.insert(destChest,{x=xx;y=yy})
+        end
+      end
       if terrain[yy][xx] == 0 then
         local l = terrain[yy]                   [(xx-1)%(#terrain[yy]+1)]
         local lu = terrain[(yy-1)%(#terrain+1)] [(xx-1)%(#terrain[yy]+1)]
