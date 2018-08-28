@@ -1,6 +1,7 @@
 local debug = false
 local showTile = false
 local showFog = true
+local mute = false
 PPM = 4 -- scale
 BLOCKSIZE = 8
 local SWIDTH = 1024--640--*2 -- screen width in pixels
@@ -163,9 +164,12 @@ function love.load(arg)
   OBJTILES['deco'][3] = love.graphics.newQuad(10*8+colorGB*256, 13*8,8,8*3,ATLAS:getDimensions())
 
 
-  --backMusic = love.audio.newSource('assets/music/cloudMoonLoop.wav', 'stream')
-  --backMusic:setLooping(true)
-  --backMusic:play()
+  backMusic = love.audio.newSource('assets/music/cloudMoonLoop2.wav', 'stream')
+  footSound = love.audio.newSource('assets/sfx/sfx_movement_footsteps1b.wav', 'static')
+  footSound:setVolume(0.5)
+  backMusic:setLooping(true)
+  backMusic:setVolume(0.7)
+  backMusic:play()
 end
 
 function love.update(dt)
@@ -330,6 +334,15 @@ function love.keypressed (key)
       tp = true
     else
       tp = false
+    end
+  end
+  if key == "m" then
+    if mute then
+      love.audio.setVolume(1)
+      mute = false
+    else
+      love.audio.setVolume(0)
+      mute = true
     end
   end
 end
@@ -1013,6 +1026,24 @@ function dropBomb(x,y)
           end
         end
       end
+    end
+  end
+
+  for i=#torchs,1,-1 do
+    if terrain[torchs[i].y][torchs[i].x] ~= 31 or
+    terrain[torchs[i].y][torchs[i].x+1] ~= 31 or
+    terrain[torchs[i].y+1][torchs[i].x] ~= 256 or
+    terrain[torchs[i].y+1][torchs[i].x+1] ~= 256 or
+    terrain[torchs[i].y+2][torchs[i].x] ~= 257 or
+    terrain[torchs[i].y+2][torchs[i].x+1] ~= 257 then
+      table.remove(torchs, i)
+    end
+  end
+  for i=#decos,1,-1 do
+    if terrain[decos[i].y][decos[i].x] ~= 31 or
+    terrain[decos[i].y+1][decos[i].x] ~= 256 or 
+    terrain[decos[i].y+2][decos[i].x] ~= 256 then
+      table.remove(decos, i)
     end
   end
 
