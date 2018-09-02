@@ -12,6 +12,7 @@ hero.fps = 1 / 5
 hero.animTimer = 1 / 5
 hero.debug = false
 hero.stepSound = 0
+hero.inventory = {}
 
 hero.sprite.walkUp = {}
 hero.sprite.walkUp[0] = love.graphics.newQuad(0 * 16, 0 * 16, 16, 16, hero.atlas:getDimensions())

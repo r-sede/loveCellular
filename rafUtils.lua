@@ -9,7 +9,7 @@ rafUtils.toZeroIndex = function(arr)
   return res
 end
 
-rafUtils.camera = {x = 0, y = 0, speed = BLOCKSIZE * PPM, mag = 4, time = 0, shakeTime = 1.5, shake = false}
+rafUtils.camera = {x = 0, y = 0, speed = BLOCKSIZE * PPM, mag = 5, time = 0, shakeTime = 0.5, shake = false}
 rafUtils.camera.keypressed = function(key)
   if key == "up" then
     rafUtils.camera.y = rafUtils.camera.y + rafUtils.camera.speed

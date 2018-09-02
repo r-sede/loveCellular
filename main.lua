@@ -1,7 +1,8 @@
 local debug = false
 local showTile = false
 local showFog = true
-local mute = false
+local mute = true
+
 PPM = 4 -- scale
 BLOCKSIZE = 8
 local SWIDTH = 1024--640--*2 -- screen width in pixels
@@ -53,6 +54,7 @@ local tp = false
 function love.load(arg)
   love.graphics.setDefaultFilter('nearest')
   love.keyboard.setKeyRepeat(true)
+  love.audio.setVolume(0)
   love.window.setMode(SWIDTH, SHEIGHT)
   love.window.setTitle('loveCellular')
   --green
@@ -174,7 +176,18 @@ end
 
 function love.update(dt)
   hero:update(dt)
-  rafUtils.camera.lookAt(hero.x,hero.y)
+
+  if rafUtils.camera.shake then
+    rafUtils.camera.time = rafUtils.camera.time + dt
+    rafUtils.camera.x = rafUtils.camera.x + (rafUtils.camera.mag * math.sin(rafUtils.camera.time * 20 * 2))
+    rafUtils.camera.y =  rafUtils.camera.y + (rafUtils.camera.mag * math.sin(rafUtils.camera.time * 20))
+    if rafUtils.camera.time >= rafUtils.camera.shakeTime then
+      rafUtils.camera.time = 0
+      rafUtils.camera.shake = false
+    end
+  else
+    rafUtils.camera.lookAt(hero.x,hero.y)
+  end
   updateFog(8)
   updateTorch(dt)
   updateBomb(dt)
@@ -315,7 +328,9 @@ function love.keypressed (key)
   end
   if key == 'b' then
     -- print(SEED)
+    if hero.inventory.bombs < 1 then return end
     table.insert(bombs, {x=rafUtils.round(hero.x),y=rafUtils.round(hero.y), coolD=3,active = true})
+    hero.inventory.bombs = hero.inventory.bombs - 1
 
   -- rien ne vas plus
 --[[     for yy=0,#terrain do
@@ -424,6 +439,7 @@ function resetMap()
     end
   end
   hero.x,hero.y = playerX,playerY
+  hero.inventory = {bombs=99}
   rafUtils.camera.x = playerX*BLOCKSIZE*PPM
   rafUtils.camera.y = playerY*BLOCKSIZE*PPM
   fog = createFog(WORLDWIDTH,WORLDHEIGHT)
@@ -1050,6 +1066,8 @@ function dropBomb(x,y)
   for i=1,#destChest do
     terrain[destChest[i].y][destChest[i].x] = 1
   end
+
+  rafUtils.camera.shake = true
   
 
 end
