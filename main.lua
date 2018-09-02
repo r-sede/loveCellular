@@ -24,6 +24,7 @@ local startIter = 11
 local neighBorHoodThres = 5
 terrain = nil
 local fog = nil
+local fogDistance = 7
 local playerX,playerY = nil,nil
 local clickX,clickY = 0,0
 
@@ -188,7 +189,7 @@ function love.update(dt)
   else
     rafUtils.camera.lookAt(hero.x,hero.y)
   end
-  updateFog(8)
+  updateFog(fogDistance)
   updateTorch(dt)
   updateBomb(dt)
 end
