@@ -190,9 +190,13 @@ function love.load(arg)
 
   backMusic = love.audio.newSource('assets/music/cloudMoonLoop2.wav', 'stream')
   footSound = love.audio.newSource('assets/sfx/sfx_movement_footsteps1b.wav', 'static')
-  footSound:setVolume(0.5)
+  bombSound = love.audio.newSource('assets/sfx/bomb.wav', 'static' )
+
+  footSound:setVolume(0.17)
   backMusic:setLooping(true)
-  backMusic:setVolume(0.7)
+  backMusic:setVolume(0.6)
+  bombSound:setPitch(0.6)
+ 
   backMusic:play()
 end
 
@@ -1163,6 +1167,8 @@ function dropBomb(x,y)
   end
 
   rafUtils.camera.shake = true
-  
+  bombSound:setAttenuationDistances( rafUtils.distance(hero.x, hero.y, x, y)*10, 1600 )
+  bombSound:setDirection( (hero.x-x)*10, (hero.y-y)*10, 0 )
+  bombSound:play()
 
 end
