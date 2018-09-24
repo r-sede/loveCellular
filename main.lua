@@ -41,6 +41,13 @@ local densChest = 1
 local colorGB = 4
 
 local bombAtlas = nil
+local explosionAtlas = nil
+local explosionTiles = {}
+local explosionTimer = 1/15
+local explosionFps = 1/15
+local explosionFrame = 0
+local explosions = {}
+
 local bombTiles = {}
 local bombTimer = 1/3
 local bombFps = 1/3
@@ -72,6 +79,20 @@ function love.load(arg)
   bombTiles[0]=love.graphics.newQuad(0*16 , 0*16, 16, 16, bombAtlas:getDimensions())
   bombTiles[1]=love.graphics.newQuad(1*16 , 0*16, 16, 16, bombAtlas:getDimensions())
   bombTiles[2]=love.graphics.newQuad(2*16 , 0*16, 16, 16, bombAtlas:getDimensions())
+
+  explosionAtlas = love.graphics.newImage('assets/img/explosion-4.png')
+  explosionTiles[0] = love.graphics.newQuad(0*128, 0*128, 128, 128, explosionAtlas:getDimensions())
+  explosionTiles[1] = love.graphics.newQuad(1*128, 0*128, 128, 128, explosionAtlas:getDimensions())
+  explosionTiles[2] = love.graphics.newQuad(2*128, 0*128, 128, 128, explosionAtlas:getDimensions())
+  explosionTiles[3] = love.graphics.newQuad(3*128, 0*128, 128, 128, explosionAtlas:getDimensions())
+  explosionTiles[4] = love.graphics.newQuad(4*128, 0*128, 128, 128, explosionAtlas:getDimensions())
+  explosionTiles[5] = love.graphics.newQuad(5*128, 0*128, 128, 128, explosionAtlas:getDimensions())
+  explosionTiles[6] = love.graphics.newQuad(6*128, 0*128, 128, 128, explosionAtlas:getDimensions())
+  explosionTiles[7] = love.graphics.newQuad(7*128, 0*128, 128, 128, explosionAtlas:getDimensions())
+  explosionTiles[8] = love.graphics.newQuad(8*128, 0*128, 128, 128, explosionAtlas:getDimensions())
+  explosionTiles[9] = love.graphics.newQuad(9*128, 0*128, 128, 128, explosionAtlas:getDimensions())
+  explosionTiles[10] = love.graphics.newQuad(10*128, 0*128, 128, 128, explosionAtlas:getDimensions())
+  explosionTiles[11] = love.graphics.newQuad(11*128, 0*128, 128, 128, explosionAtlas:getDimensions())
 
   ATLAS = love.graphics.newImage('assets/img/CB-All_Temple.png')
   TILES[0] = love.graphics.newQuad(2*8 +colorGB*256, 3*8, 8, 8, ATLAS:getDimensions())
@@ -192,6 +213,7 @@ function love.update(dt)
   updateFog(fogDistance)
   updateTorch(dt)
   updateBomb(dt)
+  updateExplosion(dt)
 end
 
 function love.draw()
@@ -244,7 +266,7 @@ function love.draw()
   --love.graphics.draw(bombAtlas,bombTiles[bombFrame],bomb.x*BLOCKSIZE*PPM - rafUtils.camera.x, bomb.y*BLOCKSIZE*PPM - rafUtils.camera.y,PPM*0.5,PPM*0.5)
   --hero
   hero:draw()
- 
+  drawExplosion(startX, endX, startY, endY)
   --2layer + debug
   for yy=startY,endY do
     for xx=startX,endX do
@@ -307,6 +329,9 @@ function love.draw()
     love.graphics.print('---------',0,90)
     love.graphics.print('hero.x: '..hero.x,0,105)
     love.graphics.print('hero.y: '..hero.y,0,120)
+    love.graphics.print('#explosions: '..#explosions,0,135)
+    love.graphics.print('explosionTimer: '..explosionTimer,0,150)
+    love.graphics.print('explosionFrame: '..explosionFrame,0,165)
     love.graphics.setColor(1,1,1,1)
   end
   
@@ -589,6 +614,7 @@ function updateBomb(dt)
       dropBomb(bombs[i].x, bombs[i].y)
       --add particle, sound, shake
       bombs[i].active = false
+      createExplosions(bombs[i].x, bombs[i].y)
     end
   end
   --clean
@@ -607,6 +633,74 @@ function drawBomb(startX, endX, startY, endY)
         if debug then
           love.graphics.setColor(1,0,1,1)
           love.graphics.rectangle('line',bombs[i].x * PPM * BLOCKSIZE - rafUtils.camera.x,bombs[i].y * PPM * BLOCKSIZE - rafUtils.camera.y,BLOCKSIZE* PPM,BLOCKSIZE*PPM)
+          love.graphics.setColor(1,1,1,1)
+        end
+      end
+    end 
+  end
+end
+
+function createExplosions(x, y)
+  local dist = 2
+  local startX = (x - dist)
+  local endX = (x + dist+1)
+  local startY = (y - dist)
+  local endY = (y + dist+1)
+
+  startY = rafUtils.clamp(startY,0,#terrain)
+  startX = rafUtils.clamp(startX,0,#terrain[startY])
+  endY = rafUtils.clamp(endY,0,#terrain)
+  endX = rafUtils.clamp(endX,0,#terrain[endY])
+  
+  for yy = startY,endY do
+    for xx = startX,endX do
+      if xx%3==0 or yy%3==0 then
+        table.insert(explosions, {x=xx, y=yy, active = true})
+      end
+    end
+  end
+
+end
+
+function updateExplosion(dt)
+  if #explosions > 1 then
+    explosionTimer = explosionTimer - dt
+    if explosionTimer <= 0 then
+      explosionFrame = explosionFrame + 1
+      explosionTimer = explosionFps
+      if explosionFrame >= (#explosionTiles+1) then
+        explosionFrame  = 0 
+        for i=1,#explosions do
+          explosions[i].active = false
+        end
+      end
+    end
+  end
+    
+  --clean
+  for i=#explosions,1,-1 do
+    if explosions[i].active == false then
+      table.remove( explosions, i )
+    end
+  end
+end
+
+function drawExplosion (startX, endX, startY, endY)
+  for i=1,#explosions do
+    if explosions[i].x >= startX and explosions[i].x < endX and explosions[i].y > startY-1 and explosions[i].y < endY then
+      if fog[explosions[i].y][explosions[i].x] == 0 then
+        love.graphics.draw (
+          explosionAtlas, explosionTiles[explosionFrame],
+          explosions[i].x*BLOCKSIZE*PPM - rafUtils.camera.x,
+          explosions[i].y*BLOCKSIZE*PPM - rafUtils.camera.y,
+          0, PPM/4, PPM/4,
+          128/2 , 128/2)
+        if debug then
+          love.graphics.setColor(1,0,1,1)
+          love.graphics.rectangle('line',
+            explosions[i].x * PPM * BLOCKSIZE - rafUtils.camera.x,
+            explosions[i].y * PPM * BLOCKSIZE - rafUtils.camera.y,
+            BLOCKSIZE* PPM, BLOCKSIZE*PPM)
           love.graphics.setColor(1,1,1,1)
         end
       end
@@ -1058,8 +1152,8 @@ function dropBomb(x,y)
   end
   for i=#decos,1,-1 do
     if terrain[decos[i].y][decos[i].x] ~= 31 or
-    terrain[decos[i].y+1][decos[i].x] ~= 256 or 
-    terrain[decos[i].y+2][decos[i].x] ~= 256 then
+    terrain[decos[i].y+1][decos[i].x] ~= 256 then --or 
+    --terrain[decos[i].y+2][decos[i].x] ~= 256 then
       table.remove(decos, i)
     end
   end
